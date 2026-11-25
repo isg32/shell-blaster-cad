@@ -1,0 +1,978 @@
+# -*- coding: utf-8 -*-
+# blaster.FCMacro -- original minimal shell-ejecting SOFT-DART TOY blaster.
+# Spring + plunger air puff, soft-tip dart refills only. Clearly a toy.
+# Coordinates: X forward (muzzle +X), Z up, bore axis on X (Y=0,Z=0), chamber mouth at X=0.
+# v4 layout: magazine in the grip, spring tube ABOVE the barrel (over-under), air leg down to the nozzle.
+# Run in FreeCAD GUI, over MCP, or headless:  freecadcmd blaster.FCMacro
+import math, os
+import FreeCAD as App
+import Part
+from FreeCAD import Vector as V
+
+# =============================== PARAMETERS ===============================
+DART_D       = 11.5   # measure your soft darts!
+DART_L       = 18.0   # measure your soft darts!
+DART_FIT     = -0.1   # shell bore = DART_D + DART_FIT (negative = snug grip)
+SHELL_WALL   = 1.5
+RIM_T        = 1.5
+SHELL_L      = 26.0
+SHELL_CB     = 5.0    # depth the nozzle enters the shell rear (also sets eject timing)
+RING_T       = 1.2    # air-orifice ring inside the shell
+ORIFICE_D    = 6.0
+TUBE_ID      = 20.0
+TUBE_OD      = 24.0
+NOZZLE_OD    = 9.0
+NOZZLE_ID    = 5.0
+MAG_CAPACITY = 4
+CLR          = 0.3    # sliding clearance
+MAG_WALL     = 1.6
+MAG_LIP_T    = 1.6
+MAG_SPRING_SOLID = 18.0   # mag spring length when fully loaded
+FOLLOWER_T   = 6.0
+BASE_T       = 3.0
+EJECT_REMAIN = 4.0    # slide travel left when shell hits ejector
+EJ_CUT_KEEP  = 0.8    # port-side lip only spans the rim (+ this much)
+FINGER_FLEX  = 0.0    # port-side lip must not be touched by the ejecting shell
+HEAD_L       = 8.0    # plunger head
+SPRING_SPACE = 51.0   # main spring pocket length at rest (free ~50)
+MAIN_SPRING_SOLID = 18.0
+CAP_PLUG_L   = 6.0
+CAP_FLANGE_T = 3.0
+ROD_D        = 6.0
+NOTCH_W      = 2.5
+NOTCH_DEPTH  = 1.2
+ORING_CS     = 2.0
+ORING_ID     = 16.0
+SLIDE_TOP    = 18.0
+SLIDE_W      = 34.0
+SLIDE_BOT    = -14.0
+GROOVE_Z     = 3.0    # side groove line height
+RAIL_Z0, RAIL_Z1 = -12.0, -9.5
+BODY_HW      = 12.0   # frame upper body half width (inside slide)
+RAIL_HW      = 15.0
+FRAME_BOT    = -27.0
+MAG_FRONT_WALL = 1.3
+PIN_D        = 3.0
+M3_D         = 3.2
+EXTRACTOR_T  = 1.2
+TRIGGER_TRAVEL = 6.0
+RAMP_DROP    = 1.6    # how far the trigger riser ramp pushes the sear tail down
+COCKED       = False  # show plunger held back (slide forward)
+SLIDE_POS    = 0.0    # 0 = forward, 1 = fully back (view / collision checks)
+EXPORT_STL   = False
+STL_DIR      = os.path.join(os.path.dirname(os.path.abspath(__file__)) if '__file__' in dir() else os.getcwd(), 'stl')
+
+# ================================ DERIVED =================================
+SHELL_OD  = DART_D + 2 * SHELL_WALL
+RIM_D     = SHELL_OD + 3.0
+STROKE    = SHELL_L + 6.0
+LIP_GAP   = 0.7 * RIM_D
+CHAMBER_D = SHELL_OD + 0.4
+BORE_D    = DART_D + 0.8
+CB_D      = NOZZLE_OD + 0.4                     # shell rear counterbore
+# chambered shell: rim behind the mouth, body inside the chamber
+SHELL_REAR_CH = -RIM_T                          # rear face X when chambered
+NOZZLE_TIP_FWD = SHELL_REAR_CH + SHELL_CB       # nozzle tip X, slide forward
+NOZZLE_TIP_BACK = NOZZLE_TIP_FWD - STROKE
+MAG_SHELL_REAR = NOZZLE_TIP_BACK + 0.5          # top mag shell rear face X
+EJECT_X   = SHELL_REAR_CH - (STROKE - EJECT_REMAIN)   # ejector front face X
+LIP_UNDER = math.sqrt((RIM_D / 2) ** 2 - (LIP_GAP / 2) ** 2)   # lip underside Z (rim touches)
+LIP_TOP   = LIP_UNDER + MAG_LIP_T
+MAG_IN_X0 = MAG_SHELL_REAR - CLR
+MAG_IN_X1 = MAG_SHELL_REAR + SHELL_L + CLR
+MAG_IN_Y  = RIM_D / 2 + CLR
+MAG_OUT_Y = MAG_IN_Y + MAG_WALL
+LOW_SHELL_Z = -(MAG_CAPACITY - 1) * RIM_D
+FOLLOWER_TOP = LOW_SHELL_Z - RIM_D / 2
+PLUG_H    = 5.0
+MAG_BODY_BOT = FOLLOWER_TOP - FOLLOWER_T - MAG_SPRING_SOLID - PLUG_H
+FRONT_CUT_Z = -RIM_D / 2 - CLR                  # extracted rim must pass over front wall
+REAR_CUT_Z  = -RIM_D / 2 - CLR
+MAG_OUT_X0 = MAG_IN_X0 - MAG_WALL
+MAG_OUT_X1 = MAG_IN_X1 + MAG_FRONT_WALL
+POST_X0   = EJECT_X - 2.0
+# ---- bolt: tube ABOVE the barrel; compression chamber at the REAR, air leg down to the nozzle ----
+LEG_FRONT = POST_X0 - 1.0                       # nozzle root / leg front face (behind the ejector post)
+LEG_T     = 8.0                                 # leg = tube rear (air) wall, carries the air channel
+LEG_X0    = LEG_FRONT - LEG_T
+LEG_HW    = 5.0
+NOZZLE_L  = NOZZLE_TIP_FWD - LEG_FRONT
+CHANNEL_D = 4.0
+BRIDGE_Z0 = RIM_D / 2 + EXTRACTOR_T + 0.55      # mag top bridge underside (clears extractor arm)
+BRIDGE_Z1 = BRIDGE_Z0 + 1.6
+TUBE_Z    = BRIDGE_Z1 + 0.45 + TUBE_OD / 2      # tube axis: tube bottom clears the mag top
+HEAD_REAR = LEG_FRONT                           # fired: head rests on the rear wall
+HEAD_FRONT = HEAD_REAR + HEAD_L
+CAP_REAR  = HEAD_FRONT + SPRING_SPACE
+TUBE_END  = CAP_REAR + CAP_PLUG_L
+CAP_FRONT = TUBE_END + CAP_FLANGE_T
+POST_GAP  = 0.3                                 # lost motion before the rod tab hits the stop post
+COMPRESS  = STROKE - POST_GAP                   # plunger compression per shot
+STOP_X0   = CAP_FRONT + CLR                     # fixed cocking stop post (on the barrel)
+STOP_X1   = STOP_X0 + 2.0
+TAB_X0    = STOP_X1 + POST_GAP                  # tab under the rod's front end (fired)
+TAB_L     = 3.0
+ROD_FRONT = TAB_X0 + TAB_L
+ROD_FLAT  = 0.7                                 # flat on the rod bottom keys it in the D-hole of the cap
+NOTCH_X0  = CAP_FRONT - 15.0                    # notch on the rod TOP, centre, fired (abs)
+SEAR_X    = NOTCH_X0 + COMPRESS                 # sear tooth X on the slide (slide forward)
+SEAR_PX, SEAR_PZ = SEAR_X + 5.0, TUBE_Z + 6.5   # sear pivot pin (on the slide)
+SEAR_TAIL_X0, SEAR_TAIL_X1 = SEAR_X + 8.0, SEAR_X + 10.5
+SEAR_TAIL_Z = TUBE_Z - 5.0                      # top of the tail tab the trigger riser pushes down
+SIDE      = -1                                  # sear tail / trigger riser side (pre-mirror)
+RISER_Y0, RISER_Y1 = 9.0, 11.6                  # |Y| band of the riser (inside the slide slot)
+TUNNEL_R  = TUBE_OD / 2 + 0.15
+SLIDE_TOP = TUBE_Z + 15.5
+SLIDE_REAR = LEG_X0 - 2.0
+SLIDE_FRONT = ROD_FRONT + COMPRESS + CLR + 3.0  # cocked rod front stays behind the slide front wall
+BARREL_END = SLIDE_FRONT + 8.0
+CHAMBER_L = SHELL_L - RIM_T + 0.3
+BARREL_R  = 10.0
+NOSE_R    = 8.0
+NOSE_X    = STOP_X1 + 1.0                       # thick barrel ends here (stop post sits on it)
+NECK_HW   = 7.0                                 # frame neck under the barrel (riser passes beside it)
+BOSS_X0, BOSS_X1 = HEAD_FRONT + 15, HEAD_FRONT + 25
+LUG_X     = CAP_REAR + CAP_PLUG_L / 2
+FRAME_REAR = SLIDE_REAR
+# grip = the magwell (thick, long, flared backstrap)
+GRIP_X0   = MAG_OUT_X0 - 8.0
+GRIP_X1   = MAG_OUT_X1 + 7.0
+GRIP_HW   = SLIDE_W / 2
+GRIP_R    = 10.0
+GRIP_BOT  = MAG_BODY_BOT
+GRIP_BACK_FLARE = 10.0
+FINGER_GAP = 22.0
+TRIG_X0   = GRIP_X1 + FINGER_GAP                # trigger slider rear (rest)
+TRIG_X1   = TRIG_X0 + 24.0
+BLADE_L   = 21.0
+BLADE_W   = 9.0
+BLADE_T   = 7.0
+TRIG_Z0   = FRAME_BOT + 2.5
+TRIG_Z1   = TRIG_Z0 + 5.0
+RISER_X0  = SEAR_TAIL_X0 - 1.0
+RISER_X1  = SEAR_TAIL_X1 + 11.0
+GUARD_W   = 10.0
+GUARD_T   = 7.0
+BUMP_Z    = FRONT_CUT_Z - 20.0
+POST_Y1   = -(RIM_D / 2 - 2.5)
+EJ_CUT_Z  = -SHELL_OD / 2 - 0.5                 # port-side mag wall height in the ejection cutout
+LIP_X0, LIP_X1 = MAG_SHELL_REAR - CLR, MAG_SHELL_REAR + RIM_T + EJ_CUT_KEEP
+PORT_LIP_Z = SHELL_OD / 2 + 0.2                 # port-side lip underside: above the body, still on the rim
+PORT_LIP_Y = math.sqrt((RIM_D / 2) ** 2 - PORT_LIP_Z ** 2)
+assert SPRING_SPACE - COMPRESS >= MAIN_SPRING_SOLID, 'main spring would go solid'
+assert NOZZLE_OD / 2 + CLR < LIP_GAP / 2, 'nozzle hits mag lips'
+assert PORT_LIP_Z + MAG_LIP_T < BRIDGE_Z0 - 0.3, 'port lip runs into bridge'
+assert NOTCH_X0 - POST_GAP - NOTCH_W > CAP_FRONT - STROKE + 1.0, 'notch hidden in the cap at full back'
+assert RISER_X1 < SLIDE_FRONT - 1.0, 'riser too far forward'
+
+COL = {
+    'purple': (0.45, 0.20, 0.70), 'black': (0.10, 0.10, 0.11), 'orange': (1.0, 0.45, 0.0),
+    'grey': (0.70, 0.70, 0.72), 'natural': (0.90, 0.88, 0.80), 'brass': (0.85, 0.65, 0.25),
+    'red': (0.85, 0.10, 0.10), 'steel': (0.55, 0.57, 0.60),
+}
+
+# ================================ HELPERS =================================
+def box(x0, x1, y0, y1, z0, z1):
+    return Part.makeBox(x1 - x0, y1 - y0, z1 - z0, V(x0, y0, z0))
+
+def cylx(r, x0, x1, y=0, z=0):
+    return Part.makeCylinder(r, x1 - x0, V(x0, y, z), V(1, 0, 0))
+
+def cylz(r, z0, z1, x=0, y=0):
+    return Part.makeCylinder(r, z1 - z0, V(x, y, z0), V(0, 0, 1))
+
+def cyly(r, y0, y1, x=0, z=0):
+    return Part.makeCylinder(r, y1 - y0, V(x, y0, z), V(0, 1, 0))
+
+def revolve_x(pts):
+    """pts: list of (x, r) closed profile -> solid revolved around X axis."""
+    w = Part.makePolygon([V(x, 0, r) for x, r in pts] + [V(pts[0][0], 0, pts[0][1])])
+    return Part.Face(w).revolve(V(0, 0, 0), V(1, 0, 0), 360)
+
+def fillet_edges(shape, r, pred):
+    edges = [e for e in shape.Edges if pred(e)]
+    if not edges:
+        return shape
+    try:
+        return shape.makeFillet(r, edges)
+    except Exception as ex:
+        print('  fillet failed (%s), r=%.2f' % (ex, r))
+        return shape
+
+def vert_edge(e, tol=1e-6):
+    p0, p1 = e.Vertexes[0].Point, e.Vertexes[-1].Point
+    return len(e.Vertexes) == 2 and abs(p0.x - p1.x) < tol and abs(p0.y - p1.y) < tol
+
+def clean(s):
+    try:
+        s = s.removeSplitter()
+    except Exception:
+        pass
+    return s
+
+# ================================= PARTS ==================================
+PARTS = {}   # name -> dict(shape, color, printable, moving, print_rot)
+
+MIRROR = True   # parts are modelled with the ejection side at +Y; mirror so it ends up on the RIGHT (-Y)
+RIGHT = -1 if MIRROR else 1
+MIRROR_SIGN = 1   # rotations about Y are unchanged by a Y-mirror
+
+def add(name, shape, color, printable=True, moving=False, print_rot=None, alpha=0):
+    if MIRROR:
+        shape = shape.mirror(V(0, 0, 0), V(0, 1, 0))
+    PARTS[name] = dict(shape=clean(shape), color=color, printable=printable,
+                       moving=moving, print_rot=print_rot, alpha=alpha)
+
+# ---- shell (local: rear face at x=0, axis X) ----
+def shell_local():
+    rr, br = RIM_D / 2, SHELL_OD / 2
+    dr, cr, orr = (DART_D + DART_FIT) / 2, CB_D / 2, ORIFICE_D / 2
+    cone = cr - orr                           # 45 deg cone under the ring (no overhang)
+    pts = [(0, cr + 0.6), (0, rr - 0.4), (0.4, rr), (RIM_T, rr), (RIM_T, br),
+           (SHELL_L - 0.5, br), (SHELL_L, br - 0.5), (SHELL_L, dr + 0.6), (SHELL_L - 0.6, dr),
+           (SHELL_CB + cone + RING_T, dr), (SHELL_CB + cone + RING_T, orr),
+           (SHELL_CB + cone, orr), (SHELL_CB, cr), (0.6, cr)]
+    return revolve_x(pts)
+
+def dart_local():
+    """reference soft dart, rear at x=0"""
+    r = DART_D / 2
+    body = cylx(r, 0, DART_L - r * 0.6)
+    tip = Part.makeSphere(r, V(DART_L - r * 0.6 - r * 0.4, 0, 0))
+    tip = tip.common(cylx(r, DART_L - r * 0.6, DART_L))
+    return body.fuse(tip)
+
+DART_SEAT = SHELL_CB + (CB_D / 2 - ORIFICE_D / 2) + RING_T   # dart rear in shell
+
+def build_shells():
+    s = shell_local()
+    t = -STROKE * SLIDE_POS
+    # chambered shell (slide back: already ejected)
+    if SLIDE_POS < 0.5:
+      add('Shell_Chambered', s.translated(V(SHELL_REAR_CH, 0, 0)), COL['brass'], moving=True,
+        print_rot=('y', -90))
+      add('Dart_ref', dart_local().translated(V(SHELL_REAR_CH + DART_SEAT, 0, 0)), COL['orange'],
+        printable=False, moving=True, alpha=40)
+    # magazine stack (top shell on bore axis, held by lips)
+    for i in range(MAG_CAPACITY):
+        z = -i * RIM_D
+        if SLIDE_POS < 0.5 and i == 0:
+            z = -(NOZZLE_OD / 2 + RIM_D / 2 + 0.05)   # pushed down by nozzle
+        if SLIDE_POS < 0.5 and i > 0:
+            z = -(NOZZLE_OD / 2 + RIM_D / 2 + 0.05) - i * RIM_D
+        add('Shell_Mag%d' % (i + 1), s.translated(V(MAG_SHELL_REAR, 0, z)), COL['brass'],
+            printable=False)
+
+# ---- magazine ----
+def build_mag():
+    x0o, x1o = MAG_OUT_X0, MAG_OUT_X1
+    body = box(x0o, x1o, -MAG_OUT_Y, MAG_OUT_Y, MAG_BODY_BOT, LIP_TOP)
+    body = fillet_edges(body, 2.0, vert_edge)
+    body = body.cut(box(MAG_IN_X0, MAG_IN_X1, -MAG_IN_Y, MAG_IN_Y, MAG_BODY_BOT - 1, LIP_UNDER))
+    body = body.cut(box(MAG_IN_X0, MAG_IN_X1, -LIP_GAP / 2, LIP_GAP / 2, LIP_UNDER - 1, LIP_TOP + 1))
+    # front wall cut low: shell exits forward (and extracted rim passes over)
+    body = body.cut(box(MAG_IN_X1 - 1, x1o + 1, -MAG_IN_Y, MAG_IN_Y, FRONT_CUT_Z, LIP_TOP + 1))
+    # rear wall cut low: nozzle + extracted rim pass
+    body = body.cut(box(x0o - 1, MAG_IN_X0 + 1, -MAG_IN_Y, MAG_IN_Y, REAR_CUT_Z, LIP_TOP + 1))
+    # ejection cutout in the port-side wall: lips are only needed where the rim is
+    body = body.cut(box(MAG_SHELL_REAR + RIM_T + EJ_CUT_KEEP, MAG_IN_X1 + 0.01, LIP_GAP / 2 - 0.01, MAG_OUT_Y + 1,
+                        EJ_CUT_Z, LIP_TOP + 1))
+    body = body.cut(box(x0o - 1, MAG_SHELL_REAR - CLR + 0.01, MAG_IN_Y - 1, MAG_OUT_Y + 1, REAR_CUT_Z, LIP_TOP + 1))
+    # port side: wall under the rim lip removed (shell swings out there); lip hangs from a top bridge
+    body = body.cut(box(LIP_X0 - 0.01, LIP_X1 + 0.01, LIP_GAP / 2 - 0.01, MAG_OUT_Y + 1, EJ_CUT_Z, LIP_UNDER))
+    body = body.cut(box(LIP_X0 - 0.01, LIP_X1 + 0.01, MAG_IN_Y, MAG_OUT_Y + 1, LIP_UNDER - 0.01, LIP_TOP + 1))
+    # hangers (modelled with the port side at +Y, mirrored later)
+    body = body.cut(box(LIP_X0 - 0.01, LIP_X1 + 0.01, 0, MAG_OUT_Y + 1, LIP_UNDER - 0.01, LIP_TOP + 0.01))
+    body = body.fuse(box(LIP_X0, LIP_X1, PORT_LIP_Y, MAG_IN_Y, PORT_LIP_Z, PORT_LIP_Z + MAG_LIP_T))    # port rim lip
+    body = body.fuse(box(LIP_X0, LIP_X1, MAG_IN_Y - 1.4, MAG_IN_Y, PORT_LIP_Z + 0.5, BRIDGE_Z0))       # port side
+    body = body.fuse(box(LIP_X0, LIP_X1, -MAG_OUT_Y, -(MAG_IN_Y - 1.4), LIP_TOP - 0.01, BRIDGE_Z0))  # ejector side
+    body = body.fuse(box(LIP_X0, LIP_X1, -MAG_OUT_Y, MAG_IN_Y, BRIDGE_Z0 - 0.01, BRIDGE_Z1))
+    # ejector post: rear-left, intercepts extracted rim, clear of resting top shell
+    post_y1 = POST_Y1
+    post = box(EJECT_X - 2.0, EJECT_X, -MAG_OUT_Y, post_y1, REAR_CUT_Z - 2, RIM_D / 2 * 0.65)
+    post = post.fuse(box(EJECT_X - 2.0, MAG_IN_X0, -MAG_OUT_Y, -MAG_IN_Y + 0.01, REAR_CUT_Z - 2, RIM_D / 2 * 0.65))
+    body = body.fuse(post)
+    # base snap windows in side walls
+    cx = (MAG_IN_X0 + MAG_IN_X1) / 2
+    body = body.cut(box(cx - 4, cx + 4, -MAG_OUT_Y - 1, MAG_OUT_Y + 1, MAG_BODY_BOT + 1.2, MAG_BODY_BOT + 2.8))
+    # detent bump on front face
+    bump = cyly(1.2, -4, 4, x=x1o - 0.6, z=BUMP_Z).common(box(x1o - 0.3, x1o + 2, -5, 5, -999, 999))
+    body = body.fuse(bump)
+    add('Mag_Body', body, COL['purple'], print_rot=None)
+
+    # follower: block with shallow saddle
+    fz1 = FOLLOWER_TOP if SLIDE_POS >= 0.5 else FOLLOWER_TOP - (NOZZLE_OD / 2 + RIM_D / 2 + 0.05)
+    f = box(MAG_IN_X0 + CLR, MAG_IN_X1 - CLR, -MAG_IN_Y + CLR, MAG_IN_Y - CLR, fz1 - FOLLOWER_T, fz1)
+    f = f.cut(cylx(SHELL_OD / 2 + 0.2, MAG_IN_X0 - 1, MAG_IN_X1 + 1, z=fz1 + SHELL_OD / 2 - 1.5))
+    f = f.cut(cylz(6.2, fz1 - FOLLOWER_T - 1, fz1 - FOLLOWER_T + 2.5, x=(MAG_IN_X0 + MAG_IN_X1) / 2))  # spring seat
+    add('Mag_Follower', f, COL['grey'])
+
+    # base plate with snap plug
+    cx = (MAG_IN_X0 + MAG_IN_X1) / 2
+    plate = box(x0o - 1, x1o + 1, -MAG_OUT_Y - 1, MAG_OUT_Y + 1, MAG_BODY_BOT - BASE_T, MAG_BODY_BOT)
+    plate = fillet_edges(plate, 2.5, vert_edge)
+    plug = box(MAG_IN_X0 + CLR, MAG_IN_X1 - CLR, -MAG_IN_Y + CLR, MAG_IN_Y - CLR, MAG_BODY_BOT, MAG_BODY_BOT + PLUG_H)
+    plug = plug.cut(box(MAG_IN_X0 + 2, MAG_IN_X1 - 2, -MAG_IN_Y + 2, MAG_IN_Y - 2, MAG_BODY_BOT + 0.01, MAG_BODY_BOT + PLUG_H + 1))
+    plug = plug.cut(cylz(6.2, MAG_BODY_BOT - 1, MAG_BODY_BOT + PLUG_H + 1, x=cx))
+    for sy in (-1, 1):   # barbs
+        yb = sy * (MAG_IN_Y - CLR)
+        barb = box(cx - 3.7, cx + 3.7, min(yb, yb + sy * 0.7), max(yb, yb + sy * 0.7), MAG_BODY_BOT + 1.4, MAG_BODY_BOT + 2.6)
+        plug = plug.fuse(barb)
+    # relief slots either side of each barb so the plug walls flex
+    for xs in (cx - 5.0, cx + 4.2):
+        plug = plug.cut(box(xs, xs + 0.8, -MAG_IN_Y - 1, MAG_IN_Y + 1, MAG_BODY_BOT + 0.01, MAG_BODY_BOT + PLUG_H + 1))
+    add('Mag_Base', plate.fuse(plug), COL['orange'])
+
+# ---- plunger: head at the rear (air end), keyed rod forward with a top notch and a bottom tab ----
+def plunger_offset():
+    if SLIDE_POS >= 0.5:
+        return -POST_GAP                        # slide back: rod held by the stop post
+    return COMPRESS if COCKED else 0.0
+
+def build_plunger():
+    off = plunger_offset()
+    zt = TUBE_Z
+    hr = TUBE_ID / 2 - CLR
+    head = cylx(hr, HEAD_REAR, HEAD_FRONT, z=zt)
+    gc = (HEAD_REAR + HEAD_FRONT) / 2
+    groove = cylx(hr + 1, gc - (ORING_CS + 0.4) / 2, gc + (ORING_CS + 0.4) / 2, z=zt).cut(cylx(ORING_ID / 2 + 0.2, gc - 5, gc + 5, z=zt))
+    head = head.cut(groove)
+    head = head.cut(cylx(ROD_D / 2 - 0.05, HEAD_FRONT - 6.0, HEAD_FRONT + 0.1, z=zt))     # press socket
+    rr = ROD_D / 2
+    rod = cylx(rr, HEAD_FRONT - 6.0, ROD_FRONT, z=zt)
+    rod = rod.cut(box(HEAD_FRONT - 7, ROD_FRONT + 1, -5, 5, zt - 5, zt - rr + ROD_FLAT))                       # key flat
+    rod = rod.cut(box(NOTCH_X0 - NOTCH_W / 2, NOTCH_X0 + NOTCH_W / 2, -5, 5, zt + rr - NOTCH_DEPTH, zt + 5))   # top notch
+    wedge = Part.Face(Part.makePolygon([V(ROD_FRONT - 2.0, 0, zt + rr + 0.1), V(ROD_FRONT + 0.1, 0, zt + rr + 0.1),
+                                        V(ROD_FRONT + 0.1, 0, zt + rr - 1.6), V(ROD_FRONT - 2.0, 0, zt + rr + 0.1)]))
+    rod = rod.cut(wedge.extrude(V(0, 10, 0)).translated(V(0, -5, 0)))                                         # lead-in for the sear
+    tab = box(TAB_X0, ROD_FRONT, -2.5, 2.5, zt - 7.0, zt - rr + ROD_FLAT + 0.01)
+    rod = rod.fuse(tab)
+    add('Plunger_Head', head.translated(V(off, 0, 0)), COL['grey'], moving=True, print_rot=('y', 90))
+    add('Plunger_Rod', rod.translated(V(off, 0, 0)), COL['steel'], moving=True, print_rot=('x', 90))
+    sp0 = HEAD_FRONT + off
+    sp1 = CAP_REAR + (-STROKE if SLIDE_POS >= 0.5 else 0.0)
+    if sp1 - sp0 > 1:
+        add('MainSpring_ref', cylx(9.0, sp0 + 0.1, sp1 - 0.1, z=zt).cut(cylx(8.0, sp0 - 1, sp1 + 1, z=zt)),
+            COL['steel'], printable=False, moving=True, alpha=70)
+
+# ---- bolt: tube (above) + rear air wall/leg + nozzle + extractor rib + screw boss ----
+def build_bolt():
+    off = -STROKE * SLIDE_POS
+    zt, ro, ri = TUBE_Z, TUBE_OD / 2, TUBE_ID / 2
+    tube = cylx(ro, LEG_X0, TUBE_END, z=zt).cut(cylx(ri, LEG_FRONT, TUBE_END + 1, z=zt))
+    leg = box(LEG_X0, LEG_FRONT, -LEG_HW, LEG_HW, -NOZZLE_OD / 2 - 1.0, zt)
+    leg = fillet_edges(leg, 2.0, lambda e: e.BoundBox.ZLength > 10)
+    noz = cylx(NOZZLE_OD / 2, LEG_FRONT - 0.5, NOZZLE_TIP_FWD)
+    b = tube.fuse(leg).fuse(noz)
+    b = b.cut(revolve_x([(NOZZLE_TIP_FWD - 0.8, NOZZLE_OD / 2 + 1), (NOZZLE_TIP_FWD + 1, NOZZLE_OD / 2 + 1),
+                         (NOZZLE_TIP_FWD + 1, NOZZLE_OD / 2 - 1.8), (NOZZLE_TIP_FWD - 0.8, NOZZLE_OD / 2 + 1)]))
+    # air path: tube rear chamber -> axial hole -> vertical channel in the leg -> nozzle bore
+    xc = (LEG_X0 + LEG_FRONT) / 2
+    zc = zt - TUBE_ID / 2 + CHANNEL_D / 2 + 1.0
+    b = b.cut(cylx(NOZZLE_ID / 2, xc, NOZZLE_TIP_FWD + 2))
+    b = b.cut(cylz(CHANNEL_D / 2, -NOZZLE_ID / 2, zc, x=xc))
+    b = b.cut(cylx(CHANNEL_D / 2, xc, LEG_FRONT + 0.5, z=zc))
+    # extractor rib on the nozzle (pocket for the separate extractor)
+    b = b.fuse(box(LEG_FRONT - 1, -9.0, -2.0, 2.0, NOZZLE_OD / 2 - 1, 6.5))
+    b = b.fuse(box(-13.6, -9.0, -2.0, 2.0, NOZZLE_OD / 2 - 1, 6.5))
+    b = b.cut(box(-13.0, -9.0, -1.25, 1.25, 5.0, 6.6))
+    # top screw boss
+    bx = (BOSS_X0 + BOSS_X1) / 2
+    boss = box(BOSS_X0, BOSS_X1, -4, 4, zt + 8.0, zt + 13.0).cut(cylx(ri, BOSS_X0 - 1, BOSS_X1 + 1, z=zt))
+    b = b.fuse(boss).cut(cylz(1.25, zt + 10.5, zt + 14, x=bx))
+    # bayonet for the front cap: 2 entry slots (+-Y), ring groove (quarter turn)
+    b = b.cut(box(LUG_X - 1.1, TUBE_END + 1, -(ri + 1.3), ri + 1.3, zt - 1.6, zt + 1.6).cut(cylx(ri - 0.5, LUG_X - 2, TUBE_END + 2, z=zt)))
+    b = b.cut(cylx(ri + 1.3, LUG_X - 1.1, LUG_X + 1.1, z=zt))
+    add('Bolt', b.translated(V(off, 0, 0)), COL['grey'], moving=True, print_rot=('y', -90))
+
+    # extractor: separate thin PETG spring arm, base presses into rib pocket
+    rimr = RIM_D / 2
+    arm = box(-13.0 + 0.15, 1.2, -1.1, 1.1, rimr + 0.25, rimr + 0.25 + EXTRACTOR_T)
+    base = box(-13.0 + 0.15, -9.0 - 0.15, -1.1, 1.1, 5.15, rimr + 0.3)
+    hook = Part.Face(Part.makePolygon([V(0.05, 0, rimr + 0.3), V(1.2, 0, rimr + 0.3), V(1.2, 0, rimr - 0.9),
+                                       V(0.6, 0, rimr - 1.15), V(0.05, 0, rimr - 1.15), V(0.05, 0, rimr + 0.3)])).extrude(V(0, 2.2, 0)).translated(V(0, -1.1, 0))
+    add('Extractor', arm.fuse(base).fuse(hook).translated(V(off, 0, 0)), COL['natural'], moving=True, print_rot=('x', 90))
+
+    # front cap: plug + flange + bayonet lugs (+-Z when locked), D-hole keys the rod
+    cap = cylx(ri - 0.15, CAP_REAR, TUBE_END, z=zt).fuse(cylx(ro, TUBE_END, CAP_FRONT, z=zt))
+    for sgn in (1, -1):
+        z0, z1 = (zt + ri - 0.5, zt + ri + 1.0) if sgn > 0 else (zt - ri - 1.0, zt - ri + 0.5)
+        cap = cap.fuse(box(LUG_X - 0.9, LUG_X + 0.9, -1.3, 1.3, z0, z1))
+    dh = cylx(ROD_D / 2 + CLR, CAP_REAR - 1, CAP_FRONT + 1, z=zt).common(
+        box(CAP_REAR - 2, CAP_FRONT + 2, -5, 5, zt - ROD_D / 2 + ROD_FLAT - CLR, zt + 5))
+    cap = cap.cut(dh)
+    add('TubeCap', cap.translated(V(off, 0, 0)), COL['grey'], moving=True, print_rot=('y', 90))
+
+# ---- sear (rides in the slide, holds the rod notch; trigger riser pushes its tail down) ----
+def sear_local():
+    zt = TUBE_Z
+    hw = 2.2
+    tip = zt + ROD_D / 2 - NOTCH_DEPTH + 0.15
+    arm = box(SEAR_X - 1.5, SEAR_TAIL_X1, -hw, hw, zt + ROD_D / 2 + 0.6, zt + 8.0)
+    boss = cyly(2.6, -hw, hw, x=SEAR_PX, z=SEAR_PZ)
+    tooth = Part.Face(Part.makePolygon([V(SEAR_X - 1.0, 0, zt + ROD_D / 2 + 0.7), V(SEAR_X + 1.0, 0, zt + ROD_D / 2 + 0.7),
+                                        V(SEAR_X + 1.0, 0, tip), V(SEAR_X - 0.2, 0, tip), V(SEAR_X - 1.0, 0, tip + 0.9),
+                                        V(SEAR_X - 1.0, 0, zt + ROD_D / 2 + 0.7)])).extrude(V(0, 2 * hw, 0)).translated(V(0, -hw, 0))
+    stop = box(SEAR_PX + 2.0, SEAR_PX + 4.0, -hw, hw, zt + 7.9, zt + math.sqrt(TUNNEL_R ** 2 - hw ** 2) - 0.05)  # rests on the tunnel ceiling
+    y_in, y_out = SIDE * hw, SIDE * (RISER_Y0 + 1.5)
+    ylo, yhi = min(y_in, y_out), max(y_in, y_out)
+    bracket = box(SEAR_TAIL_X0, SEAR_TAIL_X1, ylo, yhi, zt + ROD_D / 2 + 1.0, zt + 7.0)
+    yv0, yv1 = sorted((SIDE * (RISER_Y0 - 2.5), SIDE * (RISER_Y0 - 0.5)))
+    vert = box(SEAR_TAIL_X0, SEAR_TAIL_X1, yv0, yv1, SEAR_TAIL_Z - 1.5, zt + 7.0)
+    yt0, yt1 = sorted((SIDE * (RISER_Y0 - 2.5), SIDE * (RISER_Y0 + 1.5)))
+    tail = box(SEAR_TAIL_X0, SEAR_TAIL_X1, yt0, yt1, SEAR_TAIL_Z - 1.5, SEAR_TAIL_Z)
+    sr = arm.fuse(boss).fuse(tooth).fuse(stop).fuse(bracket).fuse(vert).fuse(tail)
+    sr = sr.cut(cyly(PIN_D / 2 + 0.15, -20, 20, x=SEAR_PX, z=SEAR_PZ))
+    return sr
+
+def build_sear():
+    off = -STROKE * SLIDE_POS
+    add('Sear', sear_local().translated(V(off, 0, 0)), COL['grey'], moving=True, print_rot=('x', 90))
+
+# ---- trigger (slider + curved finger blade) + bar/riser (pushes the sear tail down) ----
+def trigger_blade(x0, z0):
+    """curved blade: concave finger face at the front, rounded tip, soft edges"""
+    bz = z0 - BLADE_L
+    xf, xr = x0 + BLADE_W, x0
+    pts_front = [V(xf, 0, z0 + 0.1), V(xf - 3.2, 0, z0 - BLADE_L * 0.55), V(xr + 5.2, 0, bz + 1.6)]
+    pts_rear = [V(xr + 1.6, 0, bz + 1.2), V(xr - 0.6, 0, z0 - BLADE_L * 0.5), V(xr, 0, z0 + 0.1)]
+    e1 = Part.Arc(*pts_front).toShape()
+    tip = Part.Arc(pts_front[2], V(xr + 3.2, 0, bz), pts_rear[0]).toShape()
+    e2 = Part.Arc(*pts_rear).toShape()
+    top = Part.LineSegment(pts_rear[2], pts_front[0]).toShape()
+    face = Part.Face(Part.Wire([e1, tip, e2, top]))
+    b = face.extrude(V(0, BLADE_T, 0)).translated(V(0, -BLADE_T / 2, 0))
+    b = fillet_edges(b, 1.6, lambda e: e.BoundBox.ZMax < z0 - 0.5 and e.BoundBox.YLength < 1e-3)
+    return b
+
+def yband(a, b):
+    """Y interval on the SIDE of the sear/riser, given unsigned |Y| bounds"""
+    return tuple(sorted((SIDE * a, SIDE * b)))
+
+def build_trigger():
+    x0, x1 = TRIG_X0, TRIG_X1
+    z0, z1 = TRIG_Z0, TRIG_Z1
+    sl = box(x0, x1, -3.5, 3.5, z0, z1)
+    sl = sl.cut(box(x0 + 6, x1 - 2, -2.6, 2.6, z0 - 1, z1 + 1))     # spring window
+    blade = trigger_blade(x0, z0)
+    t = sl.fuse(blade)
+    # bar: connector at the slider front, runs forward to the riser beside the barrel
+    cy0, cy1 = yband(3.5, RISER_Y1)
+    conn = box(x1 - 3, x1, cy0, cy1, z0, z0 + 4)
+    conn = conn.cut(box(x1 - 4, x1 + 1, -3.5, 3.5, z0 - 1, z0 + 5))
+    by0, by1 = yband(RISER_Y0, RISER_Y1)
+    bar = box(x1 - 3, RISER_X1, by0, by1, z0, z0 + 4)
+    riser = box(RISER_X0, RISER_X1, by0, by1, z0, SEAR_TAIL_Z + 3.0)
+    tt = SEAR_TAIL_Z
+    a = SEAR_TAIL_X0
+    w = SEAR_TAIL_X1 - SEAR_TAIL_X0
+    win = Part.Face(Part.makePolygon([V(a - 3.0, 0, tt - 6.0), V(a + w + 6.5, 0, tt - 6.0), V(a + w + 6.5, 0, tt - RAMP_DROP),
+                                      V(a + w + 3.0, 0, tt - RAMP_DROP), V(a + w + 0.6, 0, tt + 0.35),
+                                      V(a - 3.0, 0, tt + 0.35), V(a - 3.0, 0, tt - 6.0)]))
+    riser = riser.cut(win.extrude(V(0, 30, 0)).translated(V(0, -15, 0)))
+    py = SIDE * 3.0
+    peg = cyly(1.0, min(SIDE * 3.6, SIDE * 2.0), max(SIDE * 3.6, SIDE * 2.0), x=x1 - 1.5, z=z0 + 2.0)
+    tb = conn.fuse(bar).fuse(riser).fuse(peg)
+    t = t.cut(cyly(1.0, min(SIDE * 3.6, SIDE * 1.9), max(SIDE * 3.6, SIDE * 1.9), x=x1 - 1.5, z=z0 + 2.0))
+    add('Trigger', t, COL['orange'], print_rot=('x', 90))
+    add('Trigger_Bar', tb, COL['grey'], print_rot='outerY')
+    add('TrigSpring_ref', cylx(2.0, x0 + 8.3, x1 - 2, z=(z0 + z1) / 2).cut(cylx(1.5, x0, x1, z=(z0 + z1) / 2)),
+        COL['steel'], printable=False, alpha=50)
+
+# ---- slide (black ASA): U-channel below the tube, tube tunnel above ----
+def build_slide():
+    off = -STROKE * SLIDE_POS
+    hw, zt = SLIDE_W / 2, TUBE_Z
+    sl = box(SLIDE_REAR, SLIDE_FRONT, -hw, hw, SLIDE_BOT, SLIDE_TOP)
+    sl = fillet_edges(sl, 8.0, lambda e: e.BoundBox.XLength > 50 and abs(e.BoundBox.ZMax - SLIDE_TOP) < 1e-3)
+    sl = fillet_edges(sl, 5.0, lambda e: abs(e.BoundBox.XMax - SLIDE_REAR) < 1e-3 and e.BoundBox.ZMin > SLIDE_BOT + 1e-3)
+    sl = fillet_edges(sl, 2.5, lambda e: abs(e.BoundBox.XMin - SLIDE_FRONT) < 1e-3 and e.BoundBox.ZMin > SLIDE_BOT + 1e-3)
+    L0, L1 = SLIDE_REAR - 1, SLIDE_FRONT + 1
+    sl = sl.cut(cylx(TUNNEL_R, SLIDE_REAR + 2.0, SLIDE_FRONT - 3.0, z=zt))
+    sl = sl.cut(box(L0, L1, -(BODY_HW + CLR), BODY_HW + CLR, SLIDE_BOT - 1, zt))          # open underside
+    sl = sl.cut(box(L0, L1, -(RAIL_HW + CLR), RAIL_HW + CLR, RAIL_Z0 - CLR, RAIL_Z1 + CLR))
+    # tube boss pocket + M3 counterbored hole from the top
+    bx = (BOSS_X0 + BOSS_X1) / 2
+    sl = sl.cut(box(BOSS_X0 - CLR, BOSS_X1 + CLR, -4 - CLR, 4 + CLR, zt, zt + 13.2))
+    sl = sl.cut(cylz(M3_D / 2, zt + 10, SLIDE_TOP + 1, x=bx)).cut(cylz(3.0, SLIDE_TOP - 2.0, SLIDE_TOP + 1, x=bx))
+    # sear: pivot pin through the walls, spring pocket in the ceiling
+    sl = sl.cut(cyly(PIN_D / 2, -hw - 1, hw + 1, x=SEAR_PX, z=SEAR_PZ))
+    sl = sl.cut(cylz(2.3, zt + 6.0, zt + TUNNEL_R + 2.0, x=SEAR_X))
+    # styling: groove line along each side, oval racking pads at the rear (no serrations)
+    for sy in (1, -1):
+        y0, y1 = (hw - 0.7, hw + 1) if sy > 0 else (-hw - 1, -hw + 0.7)
+        sl = sl.cut(box(SLIDE_REAR + 4, SLIDE_FRONT - 4, y0, y1, GROOVE_Z - 0.75, GROOVE_Z + 0.75))
+        pad = Part.Face(Part.Wire(Part.Ellipse(V(0, 0, 0), 9.0, 4.5).toShape())).extrude(V(0, 0, 3.0))
+        pad = pad.rotated(V(0, 0, 0), V(1, 0, 0), -90 * sy)
+        sl = sl.cut(pad.translated(V(SLIDE_REAR + 15, sy * (hw - 0.9), zt + 2.0)))
+    # ejection port (right side), over the shell when the slide is back
+    ex0 = EJECT_X + (STROKE - EJECT_REMAIN) - 7.0
+    port = box(ex0, ex0 + SHELL_L + 9, 3.0, hw + 1, -8.2, zt - TUBE_OD / 2 - 0.6)
+    port = fillet_edges(port, 2.0, lambda e: e.BoundBox.YLength > 5)
+    sl = sl.cut(port)
+    add('Slide', sl.translated(V(off, 0, 0)), COL['black'], moving=True, print_rot=('x', 180))
+
+# ---- orange muzzle cap (fixed to the barrel nose) ----
+def build_muzzle():
+    x0, x1 = SLIDE_FRONT + CLR, BARREL_END + 3.0
+    hw = SLIDE_W / 2
+    m = box(x0, x1, -hw, hw, FRAME_BOT, SLIDE_TOP)
+    m = fillet_edges(m, 8.0, lambda e: e.BoundBox.XLength > 5 and abs(e.BoundBox.ZMax - SLIDE_TOP) < 1e-3)
+    m = fillet_edges(m, 3.0, lambda e: e.BoundBox.XLength > 5 and abs(e.BoundBox.ZMin - FRAME_BOT) < 1e-3)
+    m = fillet_edges(m, 4.0, lambda e: abs(e.BoundBox.XMin - x1) < 1e-3 and e.BoundBox.XLength < 1e-3)
+    m = m.cut(cylx(NOSE_R, x0 - 1, BARREL_END))
+    m = m.cut(cylx(BORE_D / 2 + 0.6, x0, x1 + 1))
+    m = m.cut(revolve_x([(x1 - 1.5, BORE_D / 2 + 0.6), (x1 + 0.1, BORE_D / 2 + 2.2), (x1 + 0.1, 0), (x1 - 1.5, 0)]))
+    m = m.cut(cylx(BORE_D / 2 + 6.0, x1 - 0.8, x1 + 1).cut(cylx(BORE_D / 2 + 4.5, x1 - 2, x1 + 2)))
+    # upper face: a recessed orange panel where the tube would show
+    m = m.cut(box(x1 - 0.8, x1 + 1, -8, 8, TUBE_Z - 7, TUBE_Z + 7).cut(box(x1 - 2, x1 + 2, -6.5, 6.5, TUBE_Z - 5.5, TUBE_Z + 5.5)))
+    add('Muzzle_Orange', m, COL['orange'], print_rot=('y', -90))
+
+# ---- frame (split L/R at Y=0) ----
+def rrect_wire(x0, x1, y0, y1, z, r):
+    """rounded-rectangle wire in the plane Z=z"""
+    r = min(r, (x1 - x0) / 2 - 0.01, (y1 - y0) / 2 - 0.01)
+    c = [(x1 - r, y1 - r, 0), (x0 + r, y1 - r, 90), (x0 + r, y0 + r, 180), (x1 - r, y0 + r, 270)]
+    edges = []
+    for i, (cx, cy, a0) in enumerate(c):
+        a0r, a1r, amr = math.radians(a0), math.radians(a0 + 90), math.radians(a0 + 45)
+        p0 = V(cx + r * math.cos(a0r), cy + r * math.sin(a0r), z)
+        pm = V(cx + r * math.cos(amr), cy + r * math.sin(amr), z)
+        p1 = V(cx + r * math.cos(a1r), cy + r * math.sin(a1r), z)
+        edges.append(Part.Arc(p0, pm, p1).toShape())
+        nx, ny, na = c[(i + 1) % 4]
+        q = V(nx + r * math.cos(math.radians(na)), ny + r * math.sin(math.radians(na)), z)
+        edges.append(Part.LineSegment(p1, q).toShape())
+    return Part.Wire(edges)
+
+def rounded_column(x0, x1, hy, z_top, z_bot, r, rake=0.0, back=0.0, front=0.0):
+    """rounded section lofted downward; `rake` (deg) moves the bottom back, `back`/`front` flare the faces"""
+    dx = -math.tan(math.radians(rake)) * (z_top - z_bot)
+    w0 = rrect_wire(x0, x1, -hy, hy, z_top, r)
+    w1 = rrect_wire(x0 + dx - back, x1 + dx + front, -hy, hy, z_bot, r)
+    col = Part.makeLoft([w0, w1], True, True)
+    try:
+        col = col.makeFillet(3.0, [e for e in col.Edges if abs(e.BoundBox.ZMax - z_bot) < 1e-3])
+    except Exception as ex:
+        print('  column bottom fillet skipped:', ex)
+    return col
+
+SCREWS = None
+def build_frame():
+    global SCREWS
+    lower_top = SLIDE_BOT - CLR
+    hw = SLIDE_W / 2
+    lower = box(FRAME_REAR, SLIDE_FRONT, -hw, hw, FRAME_BOT, lower_top)
+    lower = fillet_edges(lower, 3.0, lambda e: e.BoundBox.XLength > 50 and abs(e.BoundBox.ZMin - FRAME_BOT) < 1e-3)
+    lower = fillet_edges(lower, 5.0, lambda e: abs(e.BoundBox.XMax - FRAME_REAR) < 1e-3 and e.BoundBox.XLength < 1e-3
+                         and e.BoundBox.ZLength > 5)
+    f = lower
+    # inner body + rails (inside the slide), barrel + neck, cocking stop post
+    f = f.fuse(box(FRAME_REAR + 0.5, SLIDE_FRONT, -BODY_HW, BODY_HW, lower_top - 0.01, RAIL_Z1))
+    f = f.fuse(box(FRAME_REAR + 0.5, SLIDE_FRONT - 4.5, -RAIL_HW, RAIL_HW, RAIL_Z0, RAIL_Z1))
+    f = f.fuse(cylx(BARREL_R, 0, NOSE_X)).fuse(cylx(NOSE_R, NOSE_X - 0.01, BARREL_END))
+    f = f.fuse(box(0, SLIDE_FRONT, -NECK_HW, NECK_HW, lower_top - 0.01, 0))
+    f = f.fuse(box(STOP_X0, STOP_X1, -2.5, 2.5, BARREL_R - 1.5, TUBE_Z - ROD_D / 2 + ROD_FLAT - CLR))
+    # grip around the magwell: thick, long, flared backstrap
+    f = f.fuse(rounded_column(GRIP_X0, GRIP_X1, GRIP_HW, FRAME_BOT + 1, GRIP_BOT, GRIP_R, back=GRIP_BACK_FLARE))
+    # trigger guard
+    bz = TRIG_Z0 - BLADE_L
+    gz0 = bz - GUARD_T - 1.5
+    gx_front = TRIG_X0 + 30
+    gb = box(GRIP_X1 - 8, gx_front, -GUARD_W / 2, GUARD_W / 2, gz0, gz0 + GUARD_T)
+    gp = box(gx_front - 7, gx_front, -GUARD_W / 2, GUARD_W / 2, gz0, FRAME_BOT + 2)
+    gb = fillet_edges(gb, 2.4, lambda e: e.BoundBox.XLength > 5)
+    gp = fillet_edges(gp, 2.4, lambda e: e.BoundBox.ZLength > 5)
+    f = f.fuse(gb.fuse(gp))
+    # ---- internal cuts ----
+    mw = box(MAG_OUT_X0 - CLR, MAG_OUT_X1 + CLR, -(MAG_OUT_Y + CLR), MAG_OUT_Y + CLR, GRIP_BOT - 1, 40)
+    mw = mw.fuse(box(POST_X0 - CLR, MAG_OUT_X0, -(MAG_OUT_Y + CLR), POST_Y1 + CLR, GRIP_BOT - 1, 40))
+    f = f.cut(mw)
+    f = f.cut(cyly(1.5, -4.5, 4.5, x=MAG_OUT_X1 - 0.6, z=BUMP_Z))          # mag detent notch
+    cr = CHAMBER_D / 2
+    bore = revolve_x([(-0.5, 0), (-0.5, cr + 1.2), (0.0, cr + 1.2), (1.2, cr), (CHAMBER_L, cr),
+                      (CHAMBER_L + cr - BORE_D / 2, BORE_D / 2), (BARREL_END + 1, BORE_D / 2), (BARREL_END + 1, 0)])
+    f = f.cut(bore)
+    f = f.cut(box(-0.5, 2.0, -1.6, 1.6, RIM_D / 2 - 1.6, BARREL_R + 1))        # extractor notch
+    # trigger: slider channel, blade slot, connector + bar + riser channels, return-spring post
+    tx0, tx1 = TRIG_X0 - TRIGGER_TRAVEL - CLR, TRIG_X1 + CLR
+    f = f.cut(box(tx0, tx1, -3.5 - CLR, 3.5 + CLR, TRIG_Z0 - CLR, TRIG_Z1 + CLR))
+    f = f.cut(box(tx0 - 1.0, TRIG_X0 + BLADE_W + CLR, -BLADE_T / 2 - CLR, BLADE_T / 2 + CLR, FRAME_BOT - 1, TRIG_Z0))
+    cy0, cy1 = yband(3.2, RISER_Y1 + CLR)
+    f = f.cut(box(TRIG_X1 - 3 - TRIGGER_TRAVEL - CLR, TRIG_X1 + CLR, cy0, cy1, TRIG_Z0 - CLR, TRIG_Z0 + 4 + CLR))
+    by0, by1 = yband(RISER_Y0 - CLR, RISER_Y1 + CLR)
+    f = f.cut(box(TRIG_X1 - 3 - TRIGGER_TRAVEL - CLR, RISER_X1 + CLR, by0, by1, TRIG_Z0 - CLR, TRIG_Z0 + 4 + CLR))
+    f = f.cut(box(RISER_X0 - TRIGGER_TRAVEL - CLR, RISER_X1 + CLR, by0, by1, TRIG_Z0 - CLR, RAIL_Z1 + 1.0))
+    f = f.fuse(box(TRIG_X0 + 6 + CLR, TRIG_X0 + 8.0, -2.2, 2.2, TRIG_Z0 + 0.4, TRIG_Z1 + CLR + 0.01))
+    # M3 screws: (x, z, outer half-width)
+    SCREWS = [(TRIG_X0 - 12, FRAME_BOT + 10.2, hw), (FRAME_REAR + 5, FRAME_BOT + 10.2, hw),
+              (GRIP_X1 - 3.2, -50, GRIP_HW), (POST_X0 - 4.0, -55, GRIP_HW),
+              (POST_X0 - 4.0 - GRIP_BACK_FLARE * 0.6, GRIP_BOT + 12, GRIP_HW)]
+    for x, z, yo in SCREWS:
+        f = f.cut(cyly(M3_D / 2, -yo - 2, yo + 2, x=x, z=z))
+        f = f.cut(cyly(3.1, -yo - 2, -yo + 3.0, x=x, z=z))
+        hexp = Part.makePolygon([V(x + 3.3 * math.cos(math.radians(a)), 0, z + 3.3 * math.sin(math.radians(a))) for a in range(0, 361, 60)])
+        f = f.cut(Part.Face(hexp).extrude(V(0, 5.0, 0)).translated(V(0, yo - 3.0, 0)))
+    f = clean(f)
+    big = 300
+    add('Frame_R', f.common(box(-big, big, 0, big, -big, big)), COL['purple'], print_rot='flatY')
+    add('Frame_L', f.common(box(-big, big, -big, 0, -big, big)), COL['purple'], print_rot='flatY')
+
+# ================================= DOCUMENT ===============================
+def build_all():
+    PARTS.clear()
+    build_shells()
+    build_mag()
+    build_plunger()
+    build_bolt()
+    build_sear()
+    build_trigger()
+    build_slide()
+    build_muzzle()
+    build_frame()
+
+def to_doc(name='Blaster'):
+    if name in App.listDocuments():
+        App.closeDocument(name)
+    doc = App.newDocument(name)
+    for n, p in PARTS.items():
+        o = doc.addObject('Part::Feature', n)
+        o.Shape = p['shape']
+        if App.GuiUp:
+            o.ViewObject.ShapeColor = p['color']
+            o.ViewObject.Transparency = p['alpha']
+    doc.recompute()
+    return doc
+
+def report():
+    out = []
+    for n, p in PARTS.items():
+        s = p['shape']
+        ok = s.isValid() and s.Volume > 0 and len(s.Solids) >= 1
+        out.append('%-18s %s vol=%9.1f solids=%d' % (n, 'OK ' if ok else 'BAD', s.Volume, len(s.Solids)))
+    return '\n'.join(out)
+
+# ================================ PRINT / STL =============================
+def print_shape(name):
+    p = PARTS[name]
+    sh = p['shape'].copy()
+    r = p['print_rot']
+    if r == 'flatY':          # split face (Y=0) down on the bed
+        bb = sh.BoundBox
+        r = ('x', -90) if abs(bb.YMax) < 1e-3 else ('x', 90)
+    elif r == 'outerY':       # outer (largest |Y|) face down
+        bb = sh.BoundBox
+        r = ('x', 90) if -bb.YMin > bb.YMax else ('x', -90)
+    if r:
+        ax = {'x': V(1, 0, 0), 'y': V(0, 1, 0), 'z': V(0, 0, 1)}[r[0]]
+        sh.rotate(V(0, 0, 0), ax, r[1])
+    try:
+        bb = sh.optimalBoundingBox()
+    except Exception:
+        bb = sh.BoundBox
+    sh.translate(V(-bb.XMin, -bb.YMin, -bb.ZMin))
+    return sh
+
+def print_checks(bed=256.0, min_contact=20.0):
+    out = []
+    for n, p in PARTS.items():
+        if not p['printable']:
+            continue
+        sh = print_shape(n)
+        bb = sh.BoundBox
+        contact = sum(f.Area for f in sh.Faces if f.Surface.__class__.__name__ == 'Plane' and abs(f.CenterOfMass.z) < 1e-3)
+        fits = max(bb.XLength, bb.YLength) <= bed - 6 and bb.ZLength <= bed
+        out.append((n, round(bb.XLength, 1), round(bb.YLength, 1), round(bb.ZLength, 1), round(contact, 1),
+                    fits and contact >= min_contact))
+    return out
+
+def export_stl(folder=None):
+    folder = folder or STL_DIR
+    os.makedirs(folder, exist_ok=True)
+    names = []
+    for n, p in PARTS.items():
+        if p['printable'] and not n.startswith('Shell_Mag'):
+            fn = os.path.join(folder, n + '.stl')
+            sh = print_shape(n)
+            try:
+                import MeshPart
+                MeshPart.meshFromShape(Shape=sh, LinearDeflection=0.03, AngularDeflection=0.25, Relative=False).write(fn)
+            except ImportError:
+                sh.exportStl(fn)
+            names.append(fn)
+    return names
+
+# ===================================== TESTS ====================================
+# pairs that are SUPPOSED to touch / overlap slightly (dynamic contact, press fits)
+ALLOWED = {('Shell_Chambered', 'Dart_ref'),          # dart press fit in shell
+           ('Plunger_Head', 'Plunger_Rod'),            # press-fit spigot
+           ('Extractor', 'Bolt')}                      # base press-fit into rib pocket
+
+def collisions(tol=0.01):
+    names = list(PARTS)
+    bad = []
+    for i, a in enumerate(names):
+        for b in names[i + 1:]:
+            if (a, b) in ALLOWED or (b, a) in ALLOWED:
+                continue
+            sa, sb = PARTS[a]['shape'], PARTS[b]['shape']
+            if not sa.BoundBox.intersect(sb.BoundBox):
+                continue
+            v = sa.common(sb).Volume
+            if v > tol:
+                bad.append((a, b, round(v, 2)))
+    return bad
+
+def run_tests():
+    global SLIDE_POS
+    res = {}
+    for pos in (0.0, 1.0):
+        SLIDE_POS = pos
+        build_all()
+        res[pos] = dict(invalid=[n for n, p in PARTS.items() if not p['shape'].isValid()],
+                        collisions=collisions())
+    SLIDE_POS = 0.0
+    build_all()
+    return res
+
+def mech_tests():
+    """Motion checks (assembly coords, after mirroring). Returns list of (name, ok, detail)."""
+    global SLIDE_POS
+    SLIDE_POS = 0.0
+    build_all()
+    P = PARTS
+    fixed = {n: P[n]['shape'] for n in ('Frame_R', 'Frame_L', 'Mag_Body')}
+    shell, slide = P['Shell_Chambered']['shape'], P['Slide']['shape']
+    res = []
+    def hits(sh, extra):
+        d = {}
+        for n, s in list(fixed.items()) + extra:
+            v = sh.common(s).Volume
+            if v > 0.05:
+                d[n] = round(v, 1)
+        return d
+    te = STROKE - EJECT_REMAIN
+    # 1 extraction: shell dragged back by the extractor until it meets the ejector
+    bad = {}
+    t = 0.0
+    while t <= te - 0.2:
+        h = hits(shell.translated(V(-t, 0, 0)), [('Slide', slide.translated(V(-t, 0, 0)))])
+        if h: bad[round(t, 1)] = h
+        t += 2.0
+    res.append(('extraction path clear', not bad, bad))
+    # 2 ejector contact
+    v = shell.translated(V(-te - 0.5, 0, 0)).common(fixed['Mag_Body']).Volume
+    res.append(('shell meets ejector at %.1f mm travel' % te, v > 0.05, round(v, 2)))
+    # 3 ejection: shell yaws about the extractor hook (top centre, rim front face) after the rim
+    #   hits the ejector; the left lip keeps it flat (no lift). The short port-side lip is a free
+    #   cantilever finger (wall cut away in front and behind) that may flex outward <= FINGER_FLEX.
+    sl = slide.translated(V(-te, 0, 0))
+    piv = V(SHELL_REAR_CH - te + RIM_T, 0, 0)
+    fz = box(MAG_SHELL_REAR - CLR - 1.0, MAG_SHELL_REAR + RIM_T + EJ_CUT_KEEP + 0.1, -99, 99, EJ_CUT_Z, 99)
+    fz = fz.common(box(-999, 999, -99, 0, -99, 99) if RIGHT < 0 else box(-999, 999, 0, 99, -99, 99))
+    mag = fixed['Mag_Body']
+    finger = mag.common(fz)
+    mag_rest = mag.cut(fz)
+    bad, flex = {}, 0.0
+    for ang in range(10, 81, 10):
+        sh = shell.translated(V(-te, 0, 0)).rotated(piv, V(0, 0, 1), -ang if RIGHT < 0 else ang)
+        h = {}
+        for n, o in (('Frame_R', fixed['Frame_R']), ('Frame_L', fixed['Frame_L']), ('Mag(rest)', mag_rest), ('Slide', sl)):
+            v = sh.common(o).Volume
+            if v > 0.05: h[n] = round(v, 1)
+        if h: bad[ang] = h
+        d = 0.0
+        while d < 6 and sh.common(finger.translated(V(0, RIGHT * d, 0))).Volume > 0.05:
+            d += 0.25
+        flex = max(flex, d)
+    res.append(('ejection swing clear (except lip finger)', not bad, bad))
+    res.append(('port-side lip finger flex %.2f mm <= %.1f' % (flex, FINGER_FLEX), flex <= FINGER_FLEX, flex))
+    # 3b feed: next shell pushed from the mag (top position) straight into the chamber
+    SLIDE_POS = 1.0
+    build_all()
+    top = P['Shell_Mag1']['shape']
+    slide_b = P['Slide']['shape']
+    bad = {}
+    dist = SHELL_REAR_CH - MAG_SHELL_REAR
+    t = 0.0
+    while t <= dist + 1e-6:
+        sh = top.translated(V(t, 0, 0))
+        h = {}
+        for n in ('Frame_R', 'Frame_L', 'Mag_Body'):
+            v = sh.common(P[n]['shape']).Volume
+            if v > 0.05: h[n] = round(v, 1)
+        # slide/nozzle has moved forward by t + (CB + gap) before the shell starts moving
+        v = sh.common(slide_b.translated(V(min(STROKE, t + SHELL_CB + 0.5), 0, 0))).Volume
+        if v > 0.05: h['Slide'] = round(v, 1)
+        if h: bad[round(t, 1)] = h
+        t += 2.0
+    res.append(('feed path mag -> chamber clear', not bad, bad))
+    SLIDE_POS = 0.0
+    build_all()
+    P = PARTS
+    res.extend(sear_checks())
+    return res
+
+def sear_rot(sh, ang):
+    """rotate a (slide-forward) sear about its pivot; + = tail down / tooth up"""
+    return sh.rotated(V(SEAR_PX, 0, SEAR_PZ), V(0, 1, 0), ang * MIRROR_SIGN)
+
+def lift_needed(sear, other, max_a=30.0):
+    a = 0.0
+    while a <= max_a and sear_rot(sear, a).common(other).Volume > 0.01:
+        a += 0.5
+    return a
+
+def sear_checks():
+    """sear / rod / stop post / trigger riser checks (slide forward unless noted)"""
+    global SLIDE_POS, COCKED
+    SLIDE_POS, COCKED = 0.0, True
+    build_all()
+    P = PARTS
+    res = []
+    sear, rod, bar = P['Sear']['shape'], P['Plunger_Rod']['shape'], P['Trigger_Bar']['shape']
+    frames = [P['Frame_R']['shape'], P['Frame_L']['shape']]
+    slide = P['Slide']['shape']
+    v = sear.common(rod).Volume
+    res.append(('cocked: sear tooth sits in the rod notch', v < 0.01, round(v, 3)))
+    v = sear.common(rod.translated(V(-0.5, 0, 0))).Volume
+    res.append(('cocked: sear holds the rod (spring pushes it back)', v > 0.05, round(v, 3)))
+    v = bar.common(sear).Volume
+    res.append(('trigger at rest: riser clear of the sear tail', v < 0.01, round(v, 3)))
+    pulled = bar.translated(V(-TRIGGER_TRAVEL, 0, 0))
+    a = lift_needed(sear, pulled)
+    sr = sear_rot(sear, a)
+    v1 = sr.common(rod).Volume + sr.common(rod.translated(V(-1.0, 0, 0))).Volume
+    res.append(('trigger pull lifts the sear out of the notch (%.1f deg)' % a, v1 < 0.01 and a < 30, round(v1, 3)))
+    hv = sum(sr.common(fs).Volume for fs in frames) + sr.common(slide).Volume
+    res.append(('lifted sear clear of slide/frame', hv < 0.05, round(hv, 3)))
+    a2 = lift_needed(sear, rod.translated(V(-COMPRESS + 5.0, 0, 0)))      # riding on the rod top
+    sr2 = sear_rot(sear, a2)
+    hv = sum(sr2.common(fs).Volume for fs in frames) + sr2.common(slide).Volume + sr2.common(bar).Volume
+    res.append(('sear riding on the rod (%.1f deg) clear of slide/frame/riser' % a2, hv < 0.05, round(hv, 3)))
+    SLIDE_POS, COCKED = 0.0, False
+    build_all()
+    return res
+
+def cycle_sim(step=4.0):
+    """Step through a full operating cycle and check every moving part against everything else.
+    v4: racking BACK cocks (rod tab stopped by the fixed post, tube moves back); the slide-mounted sear
+    drops into the rod notch at full back; pushing forward carries the cocked plunger; the trigger riser
+    pushes the sear tail down to fire. Returns list of (stage, ok, detail)."""
+    global SLIDE_POS, COCKED
+    SLIDE_POS, COCKED = 0.0, False
+    build_all()
+    P = PARTS
+    fixed_names = ('Frame_R', 'Frame_L', 'Mag_Body', 'Trigger', 'Trigger_Bar', 'Muzzle_Orange')
+    fixed = {n: P[n]['shape'] for n in fixed_names}
+    slide_grp = {n: P[n]['shape'] for n in ('Slide', 'Bolt', 'Extractor', 'TubeCap')}
+    sear = P['Sear']['shape']
+    plunger = {n: P[n]['shape'] for n in ('Plunger_Head', 'Plunger_Rod')}
+    out = []
+
+    def clash(moving, others, skip=()):
+        hits = {}
+        for mn, ms in moving.items():
+            for on, os_ in others.items():
+                if (mn, on) in skip or not ms.BoundBox.intersect(os_.BoundBox):
+                    continue
+                v = ms.common(os_).Volume
+                if v > 0.05:
+                    hits['%s/%s' % (mn, on)] = round(v, 2)
+        return hits
+
+    steps = sorted(set([i * step for i in range(int(STROKE / step) + 1)] + [STROKE, 0.3, 1.0, 2.0] +
+                       [STROKE - k * 0.5 for k in range(0, 9)]))
+    min_spring = 999.0
+
+    # 1) rack back: slide group moves; plunger moves only until its tab meets the stop post
+    bad, max_a = {}, 0.0
+    for t in steps:
+        pt = -min(t, POST_GAP)
+        mv = {n: s_.translated(V(-t, 0, 0)) for n, s_ in slide_grp.items()}
+        pl = {n: s_.translated(V(pt, 0, 0)) for n, s_ in plunger.items()}
+        rod = pl['Plunger_Rod']
+        sr = sear.translated(V(-t, 0, 0))
+        a = 0.0
+        while a <= 30 and sear_rot(sear, a).translated(V(-t, 0, 0)).common(rod).Volume > 0.01:
+            a += 0.5
+        max_a = max(max_a, a)
+        srr = sear_rot(sear, a).translated(V(-t, 0, 0))
+        h = clash(mv, fixed)
+        h.update(clash(pl, fixed))
+        h.update(clash(mv, pl))
+        h.update(clash({'Sear(%.1f)' % a: srr}, dict(fixed, Slide=mv['Slide'], Bolt=mv['Bolt'], TubeCap=mv['TubeCap'])))
+        if a > 30: h['sear cannot ride the rod'] = a
+        spring = (CAP_REAR - t) - (HEAD_FRONT + pt)
+        min_spring = min(min_spring, spring)
+        if spring < MAIN_SPRING_SOLID: h['spring solid'] = round(spring, 1)
+        if h: bad[t] = h
+    out.append(('1 rack back: tab stops on the post, spring compresses (min %.1f mm), sear rides max %.1f deg'
+                % (min_spring, max_a), not bad, bad))
+
+    # 2) full back: the sear tooth drops into the notch and holds the rod
+    rod_b = plunger['Plunger_Rod'].translated(V(-POST_GAP, 0, 0))
+    sr_b = sear.translated(V(-STROKE, 0, 0))
+    v = rod_b.common(sr_b).Volume
+    vh = rod_b.translated(V(-0.5, 0, 0)).common(sr_b).Volume
+    vp = plunger['Plunger_Rod'].translated(V(-POST_GAP - 0.5, 0, 0)).common(fixed['Frame_R']).Volume + \
+         plunger['Plunger_Rod'].translated(V(-POST_GAP - 0.5, 0, 0)).common(fixed['Frame_L']).Volume
+    out.append(('2 full back: sear drops into the notch, holds; tab bears on the post', v < 0.01 and vh > 0.05 and vp > 0.05,
+                (round(v, 3), round(vh, 3), round(vp, 3))))
+
+    # 3) push forward: plunger now rides with the slide (held by the sear)
+    bad = {}
+    for t in steps:
+        d = -STROKE + t
+        mv = {n: s_.translated(V(d, 0, 0)) for n, s_ in list(slide_grp.items()) + [('Sear', sear)]}
+        pl = {n: s_.translated(V(d + STROKE - POST_GAP, 0, 0) if False else V(-POST_GAP + t, 0, 0)) for n, s_ in plunger.items()}
+        h = clash(mv, fixed)
+        h.update(clash(pl, fixed))
+        h.update(clash(mv, pl, skip=()))
+        if h: bad[t] = h
+    out.append(('3 push forward with the plunger cocked (spring %.1f mm >= solid %.1f)'
+                % (SPRING_SPACE - COMPRESS, MAIN_SPRING_SOLID), not bad, bad))
+
+    # 4) trigger pull in 0.5 mm steps: riser pushes the sear tail down until the rod is free
+    rod_c = plunger['Plunger_Rod'].translated(V(COMPRESS, 0, 0))
+    bad, rel = {}, None
+    for k in range(int(TRIGGER_TRAVEL * 2) + 1):
+        d = k * 0.5
+        bar = fixed['Trigger_Bar'].translated(V(-d, 0, 0))
+        trg = fixed['Trigger'].translated(V(-d, 0, 0))
+        a = lift_needed(sear, bar)
+        srr = sear_rot(sear, a)
+        h = clash({'Trigger': trg, 'Trigger_Bar': bar}, {n: fixed[n] for n in ('Frame_R', 'Frame_L', 'Mag_Body')})
+        h.update(clash({'Sear': srr}, {'Frame_R': fixed['Frame_R'], 'Frame_L': fixed['Frame_L'], 'Slide': slide_grp['Slide']}))
+        if h: bad[d] = h
+        if rel is None and srr.common(rod_c).Volume < 0.01 and srr.common(rod_c.translated(V(-1.0, 0, 0))).Volume < 0.01:
+            rel = (d, a)
+    out.append(('4 trigger pull releases the plunger', rel is not None and not bad,
+                {'released at trigger travel/angle': rel, 'clashes': bad}))
+
+    # 5) fire: plunger runs back COMPRESS mm, clear of the lifted sear, tube and frame
+    bad = {}
+    a_rel = rel[1] if rel else 0.0
+    srr = sear_rot(sear, a_rel)
+    for t in steps:
+        if t > COMPRESS: continue
+        mv = {n: s_.translated(V(COMPRESS - t, 0, 0)) for n, s_ in plunger.items()}
+        h = clash(mv, {'Sear(lifted)': srr, 'Bolt': slide_grp['Bolt'], 'TubeCap': slide_grp['TubeCap'],
+                       'Frame_R': fixed['Frame_R'], 'Frame_L': fixed['Frame_L'], 'Slide': slide_grp['Slide']})
+        if h: bad[t] = h
+    swept = math.pi * (TUBE_ID / 2) ** 2 * COMPRESS
+    need = math.pi * (BORE_D / 2) ** 2 * (BARREL_END - SHELL_L) + math.pi * ((DART_D + DART_FIT) / 2) ** 2 * (SHELL_L - DART_SEAT)
+    dead = math.pi * (NOZZLE_ID / 2) ** 2 * (NOZZLE_L + LEG_T / 2) + math.pi * (CHANNEL_D / 2) ** 2 * (TUBE_Z + LEG_T / 2)
+    out.append(('5 fire stroke clear; plunger air %.0f mm3 >= shell+barrel %.0f + dead %.0f (x%.2f)'
+                % (swept, need, dead, swept / (need + dead)), not bad and swept >= need + dead, bad))
+    SLIDE_POS, COCKED = 0.0, False
+    build_all()
+    return out
+
+if __name__ in ('__main__', 'blaster'):
+    build_all()
+    to_doc()
+    print(report())
+    if EXPORT_STL:
+        for f in export_stl():
+            print('exported', f)
