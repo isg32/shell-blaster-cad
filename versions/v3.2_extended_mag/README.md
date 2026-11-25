@@ -225,28 +225,49 @@ are handier: one shell, one mag and so on.
 
 ## 7. Hardware list (bought)
 
-| Item | Qty | Spec | Where it goes |
+Everything that isn't printed. The size limits come from the model, so anything within them fits.
+
+### Springs (5 kinds)
+| Spring | Qty | Size | Limits from the model |
 |---|---|---|---|
-| **Main spring** | 1 | ~18 mm OD, ~1.0 mm wire, ~50 mm free length, **solid length ≤ 18 mm**, light | Inside the plunger tube |
-| **Mag spring** | 1 per mag | ~12 mm OD, **~160–170 mm free length**, light | Magazine (147 mm when empty, 25 mm when full) |
-| Catch spring | 1 | ~4 mm OD × ~8 mm | Pocket under the catch lever |
-| Trigger return spring | 1 | ~4 mm OD × ~16 mm | Window in the trigger slider |
-| Mag release spring | 1 | ~3 mm OD × ~12 mm, light | End hole of the release latch |
-| O-ring | 1 | 16 mm ID × 2 mm cross-section (NBR) | Plunger head |
-| M3 screw | 3 | M3 × 30 | Lower frame |
-| M3 screw | 2 | M3 × 25 | Front handle |
-| M3 screw | 2 | M3 × 30 | Rear grip |
-| M3 screw | 1 | M3 × 6 | Bolt to slide (from the top) |
-| M3 hex nut | 7 | Standard | Nut traps in `Frame_R` |
-| Steel pin | 1 | Ø3 mm, cut to ~20 mm (a 3 mm rod or nail) | Catch pivot |
-| Silicone grease | a little | | O-ring and sliding parts |
-| CA glue (super glue) | a little | | Rod into head, extractor, trigger peg, muzzle cap |
-| Soft-tip dart refills | | Measure them first | |
+| **Main spring** (powers the shot) | 1 | ~18 mm OD, ~1.0 mm wire, ~50 mm free length | OD ≤ 19 mm (the tube bore is 20 mm). ID ≥ 7 mm (the 6 mm rod runs through it). **Solid length ≤ 18 mm**, or the slide won't close. Keep it light. |
+| **Mag spring** | 1 per mag | ~11–12 mm OD, **160–170 mm** free length, light | OD ≤ 12 mm. It runs 147 mm long when the mag is empty and 25 mm when full. |
+| Catch spring | 1 | ~4 mm OD × 8–10 mm | Sits in a 4.6 mm pocket under the catch |
+| Trigger return spring | 1 | ~4 mm OD × ~16 mm | Sits in a 5.2 mm wide window in the trigger slider |
+| Mag release spring | 1 | ≤ 3 mm OD × ~12 mm, light | Sits in a 3.2 mm hole in the end of the latch |
 
-**Tools:** calipers, 2.5 mm hex key / screwdriver, flush cutters, 3 mm drill bit (to clean holes),
-needle file, fine sandpaper (240–400).
+### Seal
+| Item | Qty | Size | Where |
+|---|---|---|---|
+| O-ring, NBR (nitrile) | 1 | **16 mm ID × 2 mm** cross-section | Plunger head groove |
 
----
+### Fasteners
+| Item | Qty | Where |
+|---|---|---|
+| M3 × 30 screw | 5 | 3 in the lower frame, 2 in the rear grip |
+| M3 × 25 screw | 2 | Front handle |
+| M3 × 6 screw | 1 | Holds the bolt to the slide (from the top) |
+| M3 hex nut | 7 | Nut traps in `Frame_R` |
+| Steel pin, Ø3 mm × ~20 mm | 1 | Catch pivot. A piece of 3 mm rod or a cut nail works. |
+
+### Consumables
+| Item | Use |
+|---|---|
+| **Silicone grease** | O-ring and sliding parts. **Not petroleum grease**: it swells NBR O-rings. |
+| **CA glue** (super glue) | Rod into the plunger head, extractor into its rib, trigger peg, muzzle cap |
+| **Soft-tip foam dart refills** | Measure them first and set `DART_D` / `DART_L` (see section 3) |
+
+### Tools
+Calipers; a screwdriver or hex key for the M3 screws; flush cutters; drill bits for cleaning holes by hand
+(3 mm, 3.2 mm, 6 mm); a needle file; 240–400 grit sandpaper.
+
+### Buying tips
+- **Springs:** a compression spring assortment box usually covers the three small springs. Buy the main
+  spring and the 160–170 mm mag spring singly. Cutting a longer spring down to length works for the mag
+  spring.
+- **O-ring:** an NBR O-ring assortment with 2 mm cross-sections lets you try one size up or down if the seal
+  is too loose or too tight.
+- **Screws:** an M3 screw-and-nut kit covers every screw and nut.
 
 ## 8. Cleaning up the prints
 
