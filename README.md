@@ -301,6 +301,41 @@ ordering.
 **Likely cheapest basket:** the ₹310 M3 socket-head box plus the ₹470 nut pack. That works only if the box
 has the lengths above.
 
+### The other parts: Amazon.in / Robu.in (checked 2026-11-25)
+
+Prices are as listed on that date and change often, so check the live page, the exact size and the reviews
+before buying.
+
+| Part | Best match found | Price | Fit notes |
+|---|---|---|---|
+| **O-ring 16 ID × 2 mm NBR** | [uxcell NBR O-ring 16 mm ID × 20 mm OD × 2 mm, pack of 50](https://www.amazon.in/uxcell-Nitrile-Rubber-Rings-Sealing/dp/B07F32DWQ5) | ~₹1,086 | **Exact size.** 70A nitrile. |
+| O-ring kit (alternative) | [KESARIA 5C NBR O-ring kit, 386 pcs, 30 metric sizes](https://www.amazon.in/KESARIA-NBR-Kit-386-Pcs/dp/B08L6TL3R4) | — | Mostly 2 mm cross-sections, but check that 16 × 2 is in the size list |
+| **3 mm pivot pin** | [EasyMech SS304 3 × 20 dowel pin, 10 pcs (Robu.in)](https://robu.in/product/easymech-ss-304-3x20-dowel-pin/) | ~₹123 | **Exact size**, and the cheapest option |
+| 3 mm pin (alternative) | [uxcell 3 × 20 mm SS304 dowel pins, 100 pcs](https://www.amazon.in/uxcell-Stainless-Cylindrical-Support-Elements/dp/B07Y5FJBGY) | ~₹3,180 | Exact size but expensive. Clean the hole with a 3 mm bit first. |
+| **Small springs** (catch, trigger, mag release) | [CREEYA compression spring kit, 225 pcs, 4–6 mm OD, 10–30 mm](https://www.amazon.in/CREEYA-Compression-Assortment-Different-Stainless/dp/B08KD5Q2P7) | ~₹2,324 | Covers the catch (4 × 8–10) and trigger (4 × 16) springs |
+| Small springs (alternative) | [Dianrui 300 pcs, 23 sizes, SS304](https://www.amazon.in/Dianrui-Compression-Assortment-Mechanical-K-P-051-300/dp/B0BVTDP29W) / [IMPRINT 200 pcs (budget)](https://www.amazon.in/IMPRINT-Assortment-Different-Compression-Extension/dp/B0GQQ9ZRFR) | ~₹1,784 / ~₹699 | Check for a **≤ 3 mm OD** spring for the mag release (CREEYA starts at 4 mm) |
+| **Mag spring** (~12 OD, 160–170 mm) | 12 mm OD × 1 mm wire × 150 mm, pack of 2 ([Amazon.in search](https://www.amazon.in/compression-spring/s?k=12mm+compression+spring+150mm)) | ~₹150 | Closest light spring. At 150 mm it's slightly short, so the last shell in a nearly empty mag feeds weakly. The 200 mm × 1.5–3 mm wire versions (~₹3,000) are too stiff. |
+| **Main spring** (~18 OD × 1.0 wire × 50 mm, solid ≤ 18 mm) | **No exact match found** | — | See the warning below |
+| Silicone grease | [ZDBB silicone O-ring grease, 1 oz](https://www.amazon.in/ZDBB-Silicone-Lubricant-Cartridges-Pressure/dp/B0DMSSFML2) or [VAC PAC O-ring silicone grease, 100 g](https://www.amazon.in/Ring-Silicone-Grease-Performance-Lubricant/dp/B0CL2CPS9N) | — / ~₹1,099 | Silicone grease is fine on NBR O-rings. **Don't use petroleum grease.** |
+| **Soft-tip darts** | [Toy Cloud sticky-head foam darts, 40 / 200 / 300 pcs](https://www.amazon.in/Toy-Cloud-Bullet-Refill-N-Stike/dp/B09HCQ8878) | ~₹250 (40) | Listed as **7.2 × 1.2 cm**, so set `DART_D = 12.0`, `DART_L = 72` after measuring |
+| Darts (alternative) | [Storio soft foam refill darts, 50 pcs](https://www.amazon.in/Storio-Foam-Darts-Bullets-50/dp/B0CP2GCW83) | ~₹179 | No diameter listed: measure before printing shells |
+| CA glue | Any super glue (e.g. Fevikwik) | — | Local shop |
+
+> **Main spring warning.** Keep the shot indoor-safe. The closest listings are stiffer than the design spring:
+> - [Edinstry 1.5 × 18 × 50 mm](https://www.amazon.in/Diameter-Stainless-Extended-Compressed-Springs/dp/B09FFB3CC9)
+>   has 1.5 mm wire and is roughly 5× stiffer. **Don't use it.**
+> - [IMPRINT 18 mm OD × 1.2 mm wire × 100 mm](https://www.amazon.in/IMPRINT-Compression-Spring-1-2mm-100mm/dp/B0H6V9Y782)
+>   is about 2× stiffer, and cutting it shorter makes it stiffer still.
+>
+> Better: buy a **1.0 mm (or 0.8 mm) wire, 18 mm OD** spring from a spring maker. Or use the IMPRINT spring
+> uncut only if its solid length fits. Spring space: 51 mm at rest, 19 mm cocked, so the solid length must be
+> ≤ 18 mm. Never go stiffer than the design spring.
+
+> **Darts are longer than the default.** The common Indian refills are ~72 mm long, but the model was set up
+> for 18 mm stubby darts. Measure yours and set `DART_D` / `DART_L`, then re-export before printing.
+> A 72 mm dart sticks out of the 26 mm shell and needs a longer barrel; ask to have the barrel and shell
+> resized for long darts.
+
 ## 8. Cleaning up the prints
 
 1. **Remove brims** and any stringing.
