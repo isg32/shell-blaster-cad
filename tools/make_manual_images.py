@@ -234,7 +234,7 @@ def make_all():
         ('Trigger', face_pt(trig, 'right', 0.4, 0.2)), ('Side groove (styling)', V(-20, -17, G('GROOVE_Z'))),
         ('Racking pad', V(G('BODY_REAR') + 20, -17, 5.0))]))
     imgs.append(shot('03_left_side.png', all_items(P), direction=(0.0, -1.0, -0.03), title='Left side', labels=[
-        ('Screw heads (counterbored)', V(-60, 17, G('FRAME_BOT') + 10.2)), ('Orange muzzle cap', face_pt(mz, 'left', 0.5, 0.5))]))
+        ('Printed frame pins', V(-60, 17, G('FRAME_BOT') + 10.2)), ('Orange muzzle cap', face_pt(mz, 'left', 0.5, 0.5))]))
     # 4/5 sections
     def sec_labels(P, back=False):
         sx = -G('STROKE') if back else 0.0
@@ -319,21 +319,21 @@ def make_all():
     imgs.append(shot('09_magazine.png', items, direction=(-0.6, 0.6, -0.5), labels=labs, title='Magazine (exploded)'))
     # 10 trigger + catch (frame ghosted)
     rodb = P['Plunger_Rod']['shape']
-    pin = cyl_ref(G('PIN_D') / 2, -11, 11, y=G('PIVOT_X'), z=G('PIVOT_Z'), axis='y')
+    pin = cyl_ref(G('PIN_D') / 2, -11, 11, y=G('PIVOT_X'), z=G('PIVOT_Z'), axis='y')  # filament
     items = [it(P, 'Frame_R', GHOST), it(P, 'Catch'), it(P, 'Trigger'), it(P, 'Trigger_Bar'),
-             ('pin', pin, (0.55, 0.57, 0.6), 0), it(P, 'TrigSpring_ref'),
+             ('pin', pin, (0.55, 0.57, 0.6), 0), it(P, 'Spring_Trigger'), it(P, 'Spring_Catch'),
              ('rod', rodb.translated(V(-G('STROKE'), 0, 0)), P['Plunger_Rod']['color'], 50)]
-    labs = [('Catch lever', V(G('TOOTH_X') - 2, 0, -4)), ('Pivot pin (3 mm)', V(G('PIVOT_X'), 3, G('PIVOT_Z'))),
+    labs = [('Catch lever', V(G('TOOTH_X') - 2, 0, -4)), ('Pivot pin (1.75 mm filament)', V(G('PIVOT_X'), 3, G('PIVOT_Z'))),
             ('Catch foot', V(G('PIVOT_X'), -6, G('FOOT_Z0') + 1)), ('Trigger bar pushes the foot', V(G('PUSH_X') + 15, -13, G('TRIG_Z0') + 4)),
-            ('Trigger (slides back 6 mm)', face_pt(trig, 'left', 0.3, 0.3)), ('Return spring', V(G('TRIG_X0') + 15, 0, G('TRIG_Z0') + 2.5)),
+            ('Trigger (slides back 6 mm)', face_pt(trig, 'left', 0.3, 0.3)), ('Printed return spring', V(G('TRIG_X0') + 15, 0, G('TRIG_Z0') + 2.5)),
             ('Rod notch (when racked back)', V(G('ROD_TAIL_BACK') + 3.75, 0, 3))]
     sub = [x for x in items]
     imgs.append(shot('10_trigger_catch.png', sub, direction=(0.35, -0.75, -0.55), labels=labs,
                      title='Trigger + catch (frame ghosted)', zoom=1.0))
     # 11 mag release
-    items = [it(P, 'Frame_R', GHOST), it(P, 'Mag_Release'), it(P, 'RelSpring_ref'), it(P, 'Mag_Body', 40)]
+    items = [it(P, 'Frame_R', GHOST), it(P, 'Mag_Release'), it(P, 'Spring_Release'), it(P, 'Mag_Body', 40)]
     labs = [('Mag release latch', face_pt(rel, 'right', 0.5, 0.9)), ('Button (press to drop the mag)', face_pt(rel, 'right', 0.5, 0.5)),
-            ('Return spring (3 x 12 mm)', center(P['RelSpring_ref']['shape'])), ('Catch tab on the mag', V(G('LUG_X0') + 1, 0, G('REL_Z1') + 1.5))]
+            ('Printed zig-zag return spring', center(P['Spring_Release']['shape'])), ('Catch tab on the mag', V(G('LUG_X0') + 1, 0, G('REL_Z1') + 1.5))]
     imgs.append(shot('11_mag_release.png', items, direction=(0.45, 0.8, -0.4), labels=labs, title='Mag release (frame ghosted)'))
     # 12 ejection
     te = G('STROKE') - G('EJECT_REMAIN')
@@ -354,22 +354,22 @@ def make_all():
     inside = (0.12, -1.0, -0.32)
     fr_lab = [('Slide rails', V(-80, 0, G('RAIL_Z1'))), ('Chamber + barrel', V(20, 0, 0)), ('Magwell', V(-15, 0, -45)),
               ('Catch pocket', V(G('TOOTH_X'), 0, -6)), ('Trigger channel', V(G('TRIG_X0') + 12, 0, G('TRIG_Z0') + 2)),
-              ('Nut traps (on the outside)', V(-60, -17, G('FRAME_BOT') + 10.2))]
+              ('Holes for the printed pins', V(-60, -17, G('FRAME_BOT') + 10.2))]
     imgs.append(shot('13_step1_frame_R.png', [it(P, 'Frame_R')], direction=inside, labels=fr_lab,
                      title='Step 1: Frame R, split face up'))
-    s2 = [it(P, 'Frame_R'), it(P, 'Catch'), it(P, 'Trigger'), it(P, 'Trigger_Bar'), ('pin', pin, (0.55, 0.57, 0.6), 0)]
-    imgs.append(shot('14_step2_catch_trigger.png', s2, direction=inside, title='Step 2: catch + pin, trigger + bar + springs',
-                     labels=[('Catch + 3 mm pin', V(G('PIVOT_X') + 2, 0, -5)), ('Trigger + bar', V(G('TRIG_X0') + 10, 0, G('TRIG_Z0'))),
+    s2 = [it(P, 'Frame_R'), it(P, 'Catch'), it(P, 'Spring_Catch'), it(P, 'Trigger'), it(P, 'Trigger_Bar'), it(P, 'Spring_Trigger'), ('pin', pin, (0.55, 0.57, 0.6), 0)]
+    imgs.append(shot('14_step2_catch_trigger.png', s2, direction=inside, title='Step 2: catch + filament pin, trigger + bar + printed springs',
+                     labels=[('Catch + 1.75 mm filament pin', V(G('PIVOT_X') + 2, 0, -5)), ('Trigger + bar', V(G('TRIG_X0') + 10, 0, G('TRIG_Z0'))),
                              ('Bar end sits in front of the catch foot', V(G('PUSH_X'), 0, G('TRIG_Z0') + 2))]))
-    s3 = s2 + [it(P, 'Mag_Release')]
+    s3 = s2 + [it(P, 'Mag_Release'), it(P, 'Spring_Release')]
     imgs.append(shot('15_step3_mag_release.png', s3, direction=inside, title='Step 3: mag release latch + spring',
                      labels=[('Mag release latch', center(rel))]))
     s4 = s3 + [it(P, n) for n in ('Bolt', 'Extractor', 'TubeCap', 'Plunger_Head', 'Plunger_Rod')] + [it(P, 'Slide', 60)]
     imgs.append(shot('16_step4_slide.png', s4, direction=inside, title='Step 4: slide (with bolt screwed in) onto the rails',
                      labels=[('Slide (shown see-through)', face_pt(sl, 'top', 0.3)), ('Bolt + plunger inside', V(-60, 0, 12))]))
     s5 = all_items(P, hide=('Muzzle_Orange', 'Mag_Body', 'Mag_Follower', 'Mag_Base'))
-    imgs.append(shot('17_step5_close.png', s5, std='viewIsometric', title='Step 5: close with Frame L, 7 screws + nuts',
-                     labels=[('Frame L', face_pt(fl, 'top', 0.3)), ('Fit the 7 M3 screws', V(-60, -17, G('FRAME_BOT') + 10.2))]))
+    imgs.append(shot('17_step5_close.png', s5, std='viewIsometric', title='Step 5: close with Frame L, press in the 7 printed pins',
+                     labels=[('Frame L', face_pt(fl, 'top', 0.3)), ('Press in the 7 printed pins', V(-60, -17, G('FRAME_BOT') + 10.2))]))
     s6 = all_items(P, hide=('Mag_Body', 'Mag_Follower', 'Mag_Base'))
     s6 += [it(P, n, 0, V(0, 0, -60)) for n in ('Mag_Body', 'Mag_Base')]
     imgs.append(shot('18_step6_muzzle_mag.png', s6, std='viewIsometric', title='Step 6: glue the muzzle cap, push the mag in until it clicks',

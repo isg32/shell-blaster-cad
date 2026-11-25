@@ -24,27 +24,29 @@ ROLES = {
     'magazine':  [('Mag_Body', 1, 'purple'), ('Mag_Follower', 1, 'natural')],
     'internals': [('Bolt', 1, 'natural'), ('TubeCap', 1, 'natural'), ('Plunger_Head', 1, 'natural'),
                   ('Plunger_Rod', 1, 'natural'), ('Catch', 1, 'natural'), ('Trigger_Bar', 1, 'natural'),
-                  ('Extractor', 3, 'natural')],
+                  ('Extractor', 3, 'natural'), ('Bolt_Peg', 2, 'natural')] +
+                 [('Frame_Pin_%d' % k, 1, 'natural') for k in range(1, 8)],
+    'springs':   [('Spring_Catch', 2, 'natural'), ('Spring_Trigger', 2, 'natural'), ('Spring_Release', 2, 'natural')],
     'shells':    [('Shell_Chambered', 10, 'any')],
 }
 P, A = 'PETG', 'ASA'
 VARIANTS = [
     ('1_petg_main', 'Default: PETG everywhere except the ASA slide',
-     {'frame': P, 'slide': A, 'accents': P, 'magazine': P, 'internals': P, 'shells': P}),
+     {'frame': P, 'slide': A, 'accents': P, 'magazine': P, 'internals': P, 'shells': P, 'springs': P}),
     ('2_asa_internals_mag', 'ASA internals and magazine, PETG frame and accents, ASA slide',
-     {'frame': P, 'slide': A, 'accents': P, 'magazine': A, 'internals': A, 'shells': P}),
+     {'frame': P, 'slide': A, 'accents': P, 'magazine': A, 'internals': A, 'shells': P, 'springs': P}),
     ('3_asa_outside_petg_inside', 'ASA outside (frame, slide, accents), PETG internals, magazine and shells',
-     {'frame': A, 'slide': A, 'accents': A, 'magazine': P, 'internals': P, 'shells': P}),
+     {'frame': A, 'slide': A, 'accents': A, 'magazine': P, 'internals': P, 'shells': P, 'springs': P}),
     ('4_all_asa', 'Everything in ASA',
-     {'frame': A, 'slide': A, 'accents': A, 'magazine': A, 'internals': A, 'shells': A}),
+     {'frame': A, 'slide': A, 'accents': A, 'magazine': A, 'internals': A, 'shells': A, 'springs': P}),
     ('5_all_petg', 'Everything in PETG (no enclosure needed)',
-     {'frame': P, 'slide': P, 'accents': P, 'magazine': P, 'internals': P, 'shells': P}),
+     {'frame': P, 'slide': P, 'accents': P, 'magazine': P, 'internals': P, 'shells': P, 'springs': P}),
 ]
 NOTES = {
     'ASA': 'ASA: enclosure closed, ~260 C / 100 C bed, no fan for the first layers; turn on the slicer\'s '
            'filament shrinkage compensation (~0.5-0.7 %) or the 0.3 mm sliding fits get tight.',
     'flex_ASA': 'Extractor / mag base snaps in ASA are stiffer and more brittle than PETG: print the spare '
-                'extractors, and if one cracks print it in PETG.',
+                'extractors, and if one cracks print it in PETG. The printed springs are always PETG (or TPU).',
 }
 
 
@@ -101,7 +103,7 @@ for vname, desc, mats in VARIANTS:
     for role, parts in ROLES.items():
         mat = mats[role]
         for name, n, col in parts:
-            key = (mat, col, 'fine' if role == 'shells' else '')
+            key = (mat, col, 'fine' if role == 'shells' else 'springs' if role == 'springs' else '')
             sh = NS['print_shape'](name)
             for k in range(n):
                 groups.setdefault(key, []).append(('%s_%d' % (name, k + 1) if n > 1 else name, sh))
@@ -111,7 +113,7 @@ for vname, desc, mats in VARIANTS:
         mat, col, tag = key
         plates = pack(groups[key])
         for k, placed in enumerate(plates):
-            fname = '%02d_%s_%s%s%s.3mf' % (idx, mat, col, '_fine_layers' if tag else '', '_%d' % (k + 1) if len(plates) > 1 else '')
+            fname = '%02d_%s_%s%s%s.3mf' % (idx, mat, col, '_fine_layers' if tag == 'fine' else '_springs' if tag else '', '_%d' % (k + 1) if len(plates) > 1 else '')
             ok = write_plate(os.path.join(vdir, fname), placed)
             g = sum(s.Volume for _, s in placed) / 1000.0 * DENSITY[mat] * FILL
             grams[mat] += g

@@ -163,3 +163,10 @@ Steps the mechanism through a whole shot and checks every moving part against ev
 - With the button pressed, the mag drops all the way out without hitting the latch.
 - Pushing a mag in, the tab rides the ramp and pushes the latch in by up to 3.25 mm (less than the 3.5 mm
   of travel). The latch springs back under the tab once the mag is seated.
+
+### v3.3: fewer bought metal parts
+- **Frame:** the 7 M3 screws and nuts are replaced by printed press-fit `Frame_Pin_1..7` (4.5 mm, plus glue).
+- **Bolt:** the M3 × 6 bolt screw is replaced by a printed `Bolt_Peg` (4 mm).
+- **Catch pivot:** the 3 mm steel pin is replaced by a piece of 1.75 mm filament.
+- **Small springs:** the catch, trigger and release springs are replaced by printed PETG zig-zag springs.
+- **Still bought:** main spring, mag spring, one 16 × 2 O-ring, silicone grease, CA glue, darts (cut to 18 mm).

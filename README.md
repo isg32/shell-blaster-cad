@@ -110,13 +110,19 @@ hook swings the shell out of the right-hand port.
 
 ## 3. Before you print: measure your darts
 
+> **Cut your darts to 18 mm.** Common refills in India are about 12 × 72 mm. A full-length dart would need an
+> ~80 mm shell and an ~85 mm slide stroke, and the frame halves would come out ~350 mm long, too big for a
+> 256 mm bed. Cut each refill dart to **18 mm, keeping the soft tip**, with a sharp blade against a straight
+> edge. Each refill gives one blaster dart, and the shell holds it completely. The macro checks that the dart
+> fits inside the shell.
+
 Every bore is calculated from your darts, so measure them first.
 
 1. Measure the **diameter** of 3–4 darts with calipers and average them.
 2. Measure the **length** of 3–4 darts.
 3. Open `blaster.FCMacro` and set the values near the top:
    ```python
-   DART_D   = 11.5   # measured dart diameter (mm)
+   DART_D   = 12.0   # measured dart diameter (mm); Indian sticky-tip refills are ~12 mm
    DART_L   = 18.0   # measured dart length (mm)
    DART_FIT = -0.1   # shell bore = DART_D + DART_FIT (negative = snug)
    ```
@@ -203,7 +209,7 @@ are handier: one shell, one mag and so on.
 
 | STL | Qty | Material / colour | Orientation | Notes |
 |---|---|---|---|---|
-| `Frame_R` | 1 | PETG purple | Split face down | 246 mm long. Has the hex nut traps. |
+| `Frame_R` | 1 | PETG purple | Split face down | 246 mm long |
 | `Frame_L` | 1 | PETG purple | Split face down | 246 mm long. Has the screw-head counterbores. |
 | `Slide` | 1 | ASA black | Top face down | 235 mm long |
 | `Muzzle_Orange` | 1 | PETG **orange** | Rear face down | Full-face cap, glued onto the barrel nose |
@@ -220,128 +226,61 @@ are handier: one shell, one mag and so on.
 | `Mag_Follower` | 1 per mag | PETG | Flat | |
 | `Mag_Base` | 1 per mag | PETG **orange** | Flat | Snaps on, no glue |
 | `Shell_Chambered` | 10+ | PETG (any) | Rim down | Print extras: 8 for the mag + 1 chambered + spares |
+| `Frame_Pin_1`…`_7` | 7 | PETG | Lying on their flat | Replace the screws and nuts. Press-fit, plus a drop of glue. |
+| `Bolt_Peg` | 1 (+1 spare) | PETG | Standing | Replaces the bolt screw. Brim, 100 % infill. |
+| `Spring_Catch`, `Spring_Trigger`, `Spring_Release` | 1 each (+ spares) | **PETG** (or TPU) | Flat | Printed zig-zag springs: always PETG, never ASA |
 
 ---
 
 ## 7. Hardware list (bought)
 
-Everything that isn't printed. The size limits come from the model, so anything within them fits.
+Bought metal parts are kept to a minimum. The screws, nuts, pivot pin and three small springs are now
+printed or replaced by filament. Only these are left:
 
-### Springs (5 kinds)
-| Spring | Qty | Size | Limits from the model |
+| Item | Qty | Size | Why it can't be printed |
 |---|---|---|---|
-| **Main spring** (powers the shot) | 1 | ~18 mm OD, ~1.0 mm wire, ~50 mm free length | OD ≤ 19 mm (the tube bore is 20 mm). ID ≥ 7 mm (the 6 mm rod runs through it). **Solid length ≤ 18 mm**, or the slide won't close. Keep it light. |
-| **Mag spring** | 1 per mag | ~11–12 mm OD, **160–170 mm** free length, light | OD ≤ 12 mm. It runs 147 mm long when the mag is empty and 25 mm when full. |
-| Catch spring | 1 | ~4 mm OD × 8–10 mm | Sits in a 4.6 mm pocket under the catch |
-| Trigger return spring | 1 | ~4 mm OD × ~16 mm | Sits in a 5.2 mm wide window in the trigger slider |
-| Mag release spring | 1 | ≤ 3 mm OD × ~12 mm, light | Sits in a 3.2 mm hole in the end of the latch |
+| **Main spring** | 1 | ~18 mm OD, ~1.0 mm wire, ~50 mm free, **solid ≤ 18 mm**, light | Stores the shot energy. Printed plastic would creep and lose power. |
+| **Mag spring** | 1 per mag | ~11–12 mm OD, 160–170 mm free, light | Too long and too much travel for a printed spring |
+| **O-ring**, NBR | 1 | **16 mm ID × 2 mm** | Air seal for the plunger. A single one from a local hardware or auto shop costs a few rupees. |
+| **1.75 mm filament** | ~20 mm | Your PETG or ASA | Catch pivot pin. It's free, from your spool. |
 
-### Seal
-| Item | Qty | Size | Where |
+Consumables: **silicone grease** for the O-ring (not petroleum grease, which swells NBR); **CA glue** for the
+frame pins, plunger rod, extractor, trigger peg and muzzle cap; **soft-tip dart refills**, cut to 18 mm
+(see section 3).
+
+**No longer needed:** M3 screws, M3 nuts, the 3 mm steel pin, and the small catch, trigger and release springs.
+
+**Tools:** calipers; flush cutters; a sharp blade (to cut darts); drill bits for cleaning holes by hand
+(1.8 mm, 4.5 mm, 6 mm); a needle file; 240–400 grit sandpaper.
+
+### Where to buy (India, checked 2026-11-25)
+
+Prices are as listed on that date and change often. Check the live page and the exact size.
+
+| Part | Best match found | Price | Notes |
 |---|---|---|---|
-| O-ring, NBR (nitrile) | 1 | **16 mm ID × 2 mm** cross-section | Plunger head groove |
-
-### Fasteners
-| Item | Qty | Where |
-|---|---|---|
-| M3 × 30 screw | 5 | 3 in the lower frame, 2 in the rear grip |
-| M3 × 25 screw | 2 | Front handle |
-| M3 × 6 screw | 1 | Holds the bolt to the slide (from the top) |
-| M3 hex nut | 7 | Nut traps in `Frame_R` |
-| Steel pin, Ø3 mm × ~20 mm | 1 | Catch pivot. A piece of 3 mm rod or a cut nail works. |
-
-### Consumables
-| Item | Use |
-|---|---|
-| **Silicone grease** | O-ring and sliding parts. **Not petroleum grease**: it swells NBR O-rings. |
-| **CA glue** (super glue) | Rod into the plunger head, extractor into its rib, trigger peg, muzzle cap |
-| **Soft-tip foam dart refills** | Measure them first and set `DART_D` / `DART_L` (see section 3) |
-
-### Tools
-Calipers; a screwdriver or hex key for the M3 screws; flush cutters; drill bits for cleaning holes by hand
-(3 mm, 3.2 mm, 6 mm); a needle file; 240–400 grit sandpaper.
-
-### Buying tips
-- **Springs:** a compression spring assortment box usually covers the three small springs. Buy the main
-  spring and the 160–170 mm mag spring singly. Cutting a longer spring down to length works for the mag
-  spring.
-- **O-ring:** an NBR O-ring assortment with 2 mm cross-sections lets you try one size up or down if the seal
-  is too loose or too tight.
-- **Screws:** an M3 screw-and-nut kit covers every screw and nut.
-
-### Where to buy in India: onlyscrews.in (checked 2026-11-25)
-
-This is a partial check. The site rate-limited automated requests after a few pages, so only the items below
-were confirmed, with prices from its homepage on that date. Prices and stock change, so re-check before
-ordering.
-
-| Covers | Product | Price |
-|---|---|---|
-| M3 socket-head screws (stainless) | [M3 Allen Socket head SS304 assorted box](https://onlyscrews.in/products/m3-allen-socket-head-ss304-assorted-box) | ₹310 |
-| M3 hex nuts (+ M4/M5 nuts, washers) | [Hex Nuts and Washers Assorted Pack M3, M4 & M5 (SS304)](https://onlyscrews.in/products/hex-nuts-and-washers-assorted-screw-pack-m3-m4-m5-ss304) | ₹470 |
-| Screws + nuts in one kit | [M3 & M4 3D Printing assorted screw pack](https://onlyscrews.in/products/3d-printing-assorted-screw-pack-allen-socket-heads-hex-nuts-nyloc-nuts-washers-brass-inserts) | ₹1,540 |
-| Bigger screw assortment | [Hex (Allen) Socket Head Assorted Screw Pack M3, M4 & M5 (SS304)](https://onlyscrews.in/products/hexallen-socket-head-assorted-screw-pack-ss304) | ₹1,140 |
-
-> **Check the box contents before ordering.** The lengths inside the assortments weren't visible. You need
-> **M3 × 30 (5), M3 × 25 (2) and M3 × 6 (1)**. Many M3 assortments stop at 20 mm, so if 30 mm isn't included,
-> buy those screws separately.
-
-**Categories the site has but that weren't checked** (they were blocked during the lookup):
-- Single socket-head screws (M3 × 30 / × 25 / × 6): [collections/socket-head](https://onlyscrews.in/collections/socket-head)
-- Hex nuts: [collections/nuts](https://onlyscrews.in/collections/nuts)
-- 3 mm dowel pins for the catch pivot (~20 mm): [collections/hard-dowel-pins](https://onlyscrews.in/collections/hard-dowel-pins)
-- Compression springs: [collections/compression-springs](https://onlyscrews.in/collections/compression-springs)
-
-**Probably not on onlyscrews.in:**
-- **O-rings:** no O-ring category was found. Get the 16 mm ID × 2 mm NBR O-ring, or an NBR O-ring kit,
-  elsewhere.
-- **Main spring and mag spring:** the ~18 × 50 mm main spring and the 160–170 mm mag spring are unusual
-  sizes. Even if the small springs are available there, these two may need a specialist spring seller.
-
-**Likely cheapest basket:** the ₹310 M3 socket-head box plus the ₹470 nut pack. That works only if the box
-has the lengths above.
-
-### The other parts: Amazon.in / Robu.in (checked 2026-11-25)
-
-Prices are as listed on that date and change often, so check the live page, the exact size and the reviews
-before buying.
-
-| Part | Best match found | Price | Fit notes |
-|---|---|---|---|
-| **O-ring 16 ID × 2 mm NBR** | [uxcell NBR O-ring 16 mm ID × 20 mm OD × 2 mm, pack of 50](https://www.amazon.in/uxcell-Nitrile-Rubber-Rings-Sealing/dp/B07F32DWQ5) | ~₹1,086 | **Exact size.** 70A nitrile. |
-| O-ring kit (alternative) | [KESARIA 5C NBR O-ring kit, 386 pcs, 30 metric sizes](https://www.amazon.in/KESARIA-NBR-Kit-386-Pcs/dp/B08L6TL3R4) | — | Mostly 2 mm cross-sections, but check that 16 × 2 is in the size list |
-| **3 mm pivot pin** | [EasyMech SS304 3 × 20 dowel pin, 10 pcs (Robu.in)](https://robu.in/product/easymech-ss-304-3x20-dowel-pin/) | ~₹123 | **Exact size**, and the cheapest option |
-| 3 mm pin (alternative) | [uxcell 3 × 20 mm SS304 dowel pins, 100 pcs](https://www.amazon.in/uxcell-Stainless-Cylindrical-Support-Elements/dp/B07Y5FJBGY) | ~₹3,180 | Exact size but expensive. Clean the hole with a 3 mm bit first. |
-| **Small springs** (catch, trigger, mag release) | [CREEYA compression spring kit, 225 pcs, 4–6 mm OD, 10–30 mm](https://www.amazon.in/CREEYA-Compression-Assortment-Different-Stainless/dp/B08KD5Q2P7) | ~₹2,324 | Covers the catch (4 × 8–10) and trigger (4 × 16) springs |
-| Small springs (alternative) | [Dianrui 300 pcs, 23 sizes, SS304](https://www.amazon.in/Dianrui-Compression-Assortment-Mechanical-K-P-051-300/dp/B0BVTDP29W) / [IMPRINT 200 pcs (budget)](https://www.amazon.in/IMPRINT-Assortment-Different-Compression-Extension/dp/B0GQQ9ZRFR) | ~₹1,784 / ~₹699 | Check for a **≤ 3 mm OD** spring for the mag release (CREEYA starts at 4 mm) |
-| **Mag spring** (~12 OD, 160–170 mm) | 12 mm OD × 1 mm wire × 150 mm, pack of 2 ([Amazon.in search](https://www.amazon.in/compression-spring/s?k=12mm+compression+spring+150mm)) | ~₹150 | Closest light spring. At 150 mm it's slightly short, so the last shell in a nearly empty mag feeds weakly. The 200 mm × 1.5–3 mm wire versions (~₹3,000) are too stiff. |
-| **Main spring** (~18 OD × 1.0 wire × 50 mm, solid ≤ 18 mm) | **No exact match found** | — | See the warning below |
-| Silicone grease | [ZDBB silicone O-ring grease, 1 oz](https://www.amazon.in/ZDBB-Silicone-Lubricant-Cartridges-Pressure/dp/B0DMSSFML2) or [VAC PAC O-ring silicone grease, 100 g](https://www.amazon.in/Ring-Silicone-Grease-Performance-Lubricant/dp/B0CL2CPS9N) | — / ~₹1,099 | Silicone grease is fine on NBR O-rings. **Don't use petroleum grease.** |
-| **Soft-tip darts** | [Toy Cloud sticky-head foam darts, 40 / 200 / 300 pcs](https://www.amazon.in/Toy-Cloud-Bullet-Refill-N-Stike/dp/B09HCQ8878) | ~₹250 (40) | Listed as **7.2 × 1.2 cm**, so set `DART_D = 12.0`, `DART_L = 72` after measuring |
-| Darts (alternative) | [Storio soft foam refill darts, 50 pcs](https://www.amazon.in/Storio-Foam-Darts-Bullets-50/dp/B0CP2GCW83) | ~₹179 | No diameter listed: measure before printing shells |
+| **O-ring 16 × 2 mm NBR** | Local hardware / auto parts shop (single piece) or [uxcell 16 × 2 mm NBR, 50 pcs](https://www.amazon.in/uxcell-Nitrile-Rubber-Rings-Sealing/dp/B07F32DWQ5) | ~₹1,086 (50 pcs) | Buy one or two locally instead of the 50-pack if you can |
+| **Mag spring** | 12 mm OD × 1 mm wire × 150 mm, pack of 2 ([Amazon.in search](https://www.amazon.in/compression-spring/s?k=12mm+compression+spring+150mm)) | ~₹150 | Slightly short: the last shell in a nearly empty mag feeds weakly |
+| **Main spring** | **No safe exact match found** | — | See the warning below |
+| Silicone grease | [ZDBB silicone O-ring grease, 1 oz](https://www.amazon.in/ZDBB-Silicone-Lubricant-Cartridges-Pressure/dp/B0DMSSFML2) | — | A small tube is plenty |
+| **Darts** | [Toy Cloud sticky-head foam darts](https://www.amazon.in/Toy-Cloud-Bullet-Refill-N-Stike/dp/B09HCQ8878) (7.2 × 1.2 cm) or [Storio, 50 pcs](https://www.amazon.in/Storio-Foam-Darts-Bullets-50/dp/B0CP2GCW83) | ~₹250 / ~₹179 | Cut to 18 mm, keeping the tip |
 | CA glue | Any super glue (e.g. Fevikwik) | — | Local shop |
 
 > **Main spring warning.** Keep the shot indoor-safe. The closest listings are stiffer than the design spring:
-> - [Edinstry 1.5 × 18 × 50 mm](https://www.amazon.in/Diameter-Stainless-Extended-Compressed-Springs/dp/B09FFB3CC9)
->   has 1.5 mm wire and is roughly 5× stiffer. **Don't use it.**
-> - [IMPRINT 18 mm OD × 1.2 mm wire × 100 mm](https://www.amazon.in/IMPRINT-Compression-Spring-1-2mm-100mm/dp/B0H6V9Y782)
->   is about 2× stiffer, and cutting it shorter makes it stiffer still.
+> - [1.5 × 18 × 50 mm](https://www.amazon.in/Diameter-Stainless-Extended-Compressed-Springs/dp/B09FFB3CC9) is
+>   roughly 5× stiffer. **Don't use it.**
+> - [18 mm OD × 1.2 mm wire × 100 mm](https://www.amazon.in/IMPRINT-Compression-Spring-1-2mm-100mm/dp/B0H6V9Y782)
+>   is about 2× stiffer.
 >
-> Better: buy a **1.0 mm (or 0.8 mm) wire, 18 mm OD** spring from a spring maker. Or use the IMPRINT spring
-> uncut only if its solid length fits. Spring space: 51 mm at rest, 19 mm cocked, so the solid length must be
-> ≤ 18 mm. Never go stiffer than the design spring.
-
-> **Darts are longer than the default.** The common Indian refills are ~72 mm long, but the model was set up
-> for 18 mm stubby darts. Measure yours and set `DART_D` / `DART_L`, then re-export before printing.
-> A 72 mm dart sticks out of the 26 mm shell and needs a longer barrel; ask to have the barrel and shell
-> resized for long darts.
+> Get a **1.0 mm (or 0.8 mm) wire, 18 mm OD** spring from a spring maker. Its solid length must be ≤ 18 mm
+> (51 mm pocket at rest, 19 mm cocked). Never go stiffer than the design spring.
 
 ## 8. Cleaning up the prints
 
 1. **Remove brims** and any stringing.
 2. **Clean the holes:**
-   - Run a 3 mm drill bit by hand through the pivot-pin holes.
-   - Use a 3.2 mm bit for the screw holes.
+   - Run a 1.8 mm drill bit by hand through the catch pivot holes, so the filament pin slides in.
+   - Use a 4.5 mm bit for the frame-pin holes, so the printed pins press in snugly.
    - Use a 6 mm bit for the rod hole in the cap.
 3. **Sliding surfaces:** lightly sand these until they slide without wobble. Don't overdo it:
    - the slide rails and their grooves in the slide
@@ -357,7 +296,7 @@ before buying.
 ## 9. Assembly
 
 Work on a clean table and keep the screws in a tray. Lay `Frame_R` split face up. It is the half with the
-nut traps.
+holes for the printed pins.
 
 ### 9.1 Plunger
 ![Bolt and plunger, exploded](docs/images/08_bolt_plunger.png)
@@ -377,7 +316,7 @@ nut traps.
 
 ### 9.3 Slide
 1. Turn the `Slide` upside down. Lay the bolt into it from below, with the screw boss into its pocket.
-2. Fix it with the **M3 × 6** screw from the top of the slide.
+2. Press the printed **`Bolt_Peg`** through the hole in the top of the slide into the bolt's boss, and add a drop of glue.
 
 ### 9.4 Catch (in `Frame_R`)
 Start with `Frame_R` lying split face up:
@@ -388,14 +327,14 @@ Then fit the catch and the trigger. This close-up has the frame made see-through
 
 ![Trigger and catch close-up](docs/images/10_trigger_catch.png)
 
-1. Drop the **catch spring** into the pocket under the catch slot at the rear.
+1. Stand the printed **`Spring_Catch`** (zig-zag) in the pocket under the catch slot at the rear.
 2. Place the `Catch` lever: tooth up and forward, foot down and outward.
-3. Push the **Ø3 pin** through the pivot hole.
+3. Push a ~20 mm piece of **1.75 mm filament** through the pivot hole as the pin, and trim it flush.
 4. Press the tooth down with a finger. It should spring back up.
 
 ### 9.5 Trigger (in `Frame_R`)
 1. Push the peg of `Trigger_Bar` into the hole in the side of `Trigger`. Add a drop of CA and keep them square.
-2. Put the **trigger return spring** in the trigger's window, in front of the small post in the frame.
+2. Put the printed **`Spring_Trigger`** (zig-zag) in the trigger's window, in front of the small post in the frame.
 3. Lay the trigger and bar into their channels. The bar's rear end must sit just in front of the catch's foot.
 4. Pull the trigger. The bar should push the foot back and the catch tooth should drop. Let go and it returns.
 
@@ -404,7 +343,7 @@ Then fit the catch and the trigger. This close-up has the frame made see-through
 ### 9.6 Mag release (in `Frame_R`)
 ![Mag release close-up](docs/images/11_mag_release.png)
 
-1. Drop the **mag release spring** into the hole in the inner end of `Mag_Release`.
+1. Put the printed **`Spring_Release`** (zig-zag) in the pocket behind the latch's collar.
 2. Lay the latch in its channel behind the magwell, with the button out through the right side of the frame.
 3. Press the button. It should move about 3.5 mm and spring back.
 
@@ -417,12 +356,10 @@ Then fit the catch and the trigger. This close-up has the frame made see-through
 2. Check the following, then push the slide fully forward:
    - The nozzle points into the chamber.
    - The plunger rod's tail sits over the catch.
-3. Put the 7 **hex nuts** into the nut traps in `Frame_R`. A dab of glue stops them falling out.
-4. Place `Frame_L` on top and fit the screws:
-   - **M3 × 30** in the lower frame and the rear grip
-   - **M3 × 25** in the front handle
-
-   Tighten evenly and **don't overtighten**. The slide must still slide.
+3. Place `Frame_L` on top.
+4. Press the 7 printed **frame pins** through the holes, flat side any way round. Lightly tap them flush, and
+   put a drop of CA glue on each end once everything works. Leave the glue off until then, so you can still
+   take it apart.
 5. Rack the slide a few times by hand. It should run smoothly the whole 32 mm.
 
 ![Step 5, frame closed](docs/images/17_step5_close.png)
@@ -480,7 +417,9 @@ part.
 | Shell doesn't eject / ejects weakly | Ejector timing | Adjust `EJECT_REMAIN` (default 4 mm of slide travel left when the rim hits the post) |
 | Catch doesn't hold | Notch too shallow / worn | `NOTCH_DEPTH` + 0.2 (rod core stays ≥ 3.6 mm) |
 | Trigger won't fire | Bar doesn't reach the foot | Reduce `FOOT_GAP` |
-| Mag won't latch | Latch sticky / spring weak | Sand the latch channel; stronger release spring |
+| Mag won't latch | Latch sticky / spring weak | Sand the latch channel; reprint `Spring_Release` thicker (`SPRING_T` 0.9) or in TPU |
+| A printed spring feels weak or takes a set | PETG strip too thin / too hot | `SPRING_T` + 0.1 mm and reprint, or print it in TPU |
+| Frame pins loose | Holes printed oversize | A drop of CA glue on each pin end, or reduce the `+ 0.05` hole clearance |
 | Mag won't drop when pressed | Button travel short | Check the latch slides the full 3.5 mm; clean the channel |
 | Slide sticks | Tight rails / elephant foot | Sand the rail ribs; raise `CLR` to 0.35 and reprint |
 

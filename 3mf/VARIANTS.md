@@ -10,13 +10,14 @@ Default: PETG everywhere except the ASA slide.
 | Plate | Filament | Parts | Filament | Closed mesh |
 |---|---|---|---|---|
 | `01_ASA_black.3mf` | ASA black | Slide | ~60 g | yes |
-| `02_PETG_any_fine_layers.3mf` | PETG any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~14 g | yes |
-| `03_PETG_natural.3mf` | PETG natural | Trigger_Bar, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod | ~16 g | yes |
-| `04_PETG_orange.3mf` | PETG orange | Muzzle_Orange, Mag_Base, Mag_Release, Trigger | ~13 g | yes |
-| `05_PETG_purple_1.3mf` | PETG purple | Frame_R | ~92 g | yes |
-| `06_PETG_purple_2.3mf` | PETG purple | Frame_L, Mag_Body | ~109 g | yes |
+| `02_PETG_any_fine_layers.3mf` | PETG any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~15 g | yes |
+| `03_PETG_natural.3mf` | PETG natural | Trigger_Bar, Frame_Pin_1, Frame_Pin_2, Frame_Pin_3, Frame_Pin_6, Frame_Pin_7, Frame_Pin_4, Frame_Pin_5, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod, Bolt_Peg_1, Bolt_Peg_2 | ~19 g | yes |
+| `04_PETG_natural_springs.3mf` | PETG natural | Spring_Trigger_1, Spring_Trigger_2, Spring_Catch_1, Spring_Catch_2, Spring_Release_1, Spring_Release_2 | ~1 g | yes |
+| `05_PETG_orange.3mf` | PETG orange | Muzzle_Orange, Mag_Base, Mag_Release, Trigger | ~13 g | yes |
+| `06_PETG_purple_1.3mf` | PETG purple | Frame_R | ~91 g | yes |
+| `07_PETG_purple_2.3mf` | PETG purple | Frame_L, Mag_Body | ~109 g | yes |
 
-**Total:** PETG ~244 g, ASA ~60 g.
+**Total:** PETG ~247 g, ASA ~60 g.
 
 > ASA: enclosure closed, ~260 C / 100 C bed, no fan for the first layers; turn on the slicer's filament shrinkage compensation (~0.5-0.7 %) or the 0.3 mm sliding fits get tight.
 
@@ -27,17 +28,18 @@ ASA internals and magazine, PETG frame and accents, ASA slide.
 | Plate | Filament | Parts | Filament | Closed mesh |
 |---|---|---|---|---|
 | `01_ASA_black.3mf` | ASA black | Slide | ~60 g | yes |
-| `02_ASA_natural.3mf` | ASA natural | Trigger_Bar, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod | ~14 g | yes |
-| `03_ASA_purple.3mf` | ASA purple | Mag_Body | ~14 g | yes |
-| `04_PETG_any_fine_layers.3mf` | PETG any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~14 g | yes |
-| `05_PETG_orange.3mf` | PETG orange | Muzzle_Orange, Mag_Base, Mag_Release, Trigger | ~13 g | yes |
-| `06_PETG_purple_1.3mf` | PETG purple | Frame_R | ~92 g | yes |
-| `07_PETG_purple_2.3mf` | PETG purple | Frame_L | ~92 g | yes |
+| `02_ASA_natural.3mf` | ASA natural | Trigger_Bar, Frame_Pin_1, Frame_Pin_2, Frame_Pin_3, Frame_Pin_6, Frame_Pin_7, Frame_Pin_4, Frame_Pin_5, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod, Bolt_Peg_1, Bolt_Peg_2 | ~16 g | yes |
+| `03_ASA_purple.3mf` | ASA purple | Mag_Body | ~15 g | yes |
+| `04_PETG_any_fine_layers.3mf` | PETG any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~15 g | yes |
+| `05_PETG_natural_springs.3mf` | PETG natural | Spring_Trigger_1, Spring_Trigger_2, Spring_Catch_1, Spring_Catch_2, Spring_Release_1, Spring_Release_2 | ~1 g | yes |
+| `06_PETG_orange.3mf` | PETG orange | Muzzle_Orange, Mag_Base, Mag_Release, Trigger | ~13 g | yes |
+| `07_PETG_purple_1.3mf` | PETG purple | Frame_R | ~91 g | yes |
+| `08_PETG_purple_2.3mf` | PETG purple | Frame_L | ~92 g | yes |
 
-**Total:** PETG ~212 g, ASA ~88 g.
+**Total:** PETG ~211 g, ASA ~90 g.
 
 > ASA: enclosure closed, ~260 C / 100 C bed, no fan for the first layers; turn on the slicer's filament shrinkage compensation (~0.5-0.7 %) or the 0.3 mm sliding fits get tight.
-> Extractor / mag base snaps in ASA are stiffer and more brittle than PETG: print the spare extractors, and if one cracks print it in PETG.
+> Extractor / mag base snaps in ASA are stiffer and more brittle than PETG: print the spare extractors, and if one cracks print it in PETG. The printed springs are always PETG (or TPU).
 
 ## 3_asa_outside_petg_inside
 
@@ -48,15 +50,16 @@ ASA outside (frame, slide, accents), PETG internals, magazine and shells.
 | `01_ASA_black.3mf` | ASA black | Slide | ~60 g | yes |
 | `02_ASA_orange.3mf` | ASA orange | Muzzle_Orange, Mag_Base, Mag_Release, Trigger | ~11 g | yes |
 | `03_ASA_purple_1.3mf` | ASA purple | Frame_R | ~77 g | yes |
-| `04_ASA_purple_2.3mf` | ASA purple | Frame_L | ~78 g | yes |
-| `05_PETG_any_fine_layers.3mf` | PETG any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~14 g | yes |
-| `06_PETG_natural.3mf` | PETG natural | Trigger_Bar, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod | ~16 g | yes |
-| `07_PETG_purple.3mf` | PETG purple | Mag_Body | ~17 g | yes |
+| `04_ASA_purple_2.3mf` | ASA purple | Frame_L | ~77 g | yes |
+| `05_PETG_any_fine_layers.3mf` | PETG any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~15 g | yes |
+| `06_PETG_natural.3mf` | PETG natural | Trigger_Bar, Frame_Pin_1, Frame_Pin_2, Frame_Pin_3, Frame_Pin_6, Frame_Pin_7, Frame_Pin_4, Frame_Pin_5, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod, Bolt_Peg_1, Bolt_Peg_2 | ~19 g | yes |
+| `07_PETG_natural_springs.3mf` | PETG natural | Spring_Trigger_1, Spring_Trigger_2, Spring_Catch_1, Spring_Catch_2, Spring_Release_1, Spring_Release_2 | ~1 g | yes |
+| `08_PETG_purple.3mf` | PETG purple | Mag_Body | ~17 g | yes |
 
-**Total:** PETG ~47 g, ASA ~226 g.
+**Total:** PETG ~52 g, ASA ~225 g.
 
 > ASA: enclosure closed, ~260 C / 100 C bed, no fan for the first layers; turn on the slicer's filament shrinkage compensation (~0.5-0.7 %) or the 0.3 mm sliding fits get tight.
-> Extractor / mag base snaps in ASA are stiffer and more brittle than PETG: print the spare extractors, and if one cracks print it in PETG.
+> Extractor / mag base snaps in ASA are stiffer and more brittle than PETG: print the spare extractors, and if one cracks print it in PETG. The printed springs are always PETG (or TPU).
 
 ## 4_all_asa
 
@@ -64,17 +67,18 @@ Everything in ASA.
 
 | Plate | Filament | Parts | Filament | Closed mesh |
 |---|---|---|---|---|
-| `01_ASA_any_fine_layers.3mf` | ASA any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~12 g | yes |
+| `01_ASA_any_fine_layers.3mf` | ASA any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~13 g | yes |
 | `02_ASA_black.3mf` | ASA black | Slide | ~60 g | yes |
-| `03_ASA_natural.3mf` | ASA natural | Trigger_Bar, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod | ~14 g | yes |
+| `03_ASA_natural.3mf` | ASA natural | Trigger_Bar, Frame_Pin_1, Frame_Pin_2, Frame_Pin_3, Frame_Pin_6, Frame_Pin_7, Frame_Pin_4, Frame_Pin_5, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod, Bolt_Peg_1, Bolt_Peg_2 | ~16 g | yes |
 | `04_ASA_orange.3mf` | ASA orange | Muzzle_Orange, Mag_Base, Mag_Release, Trigger | ~11 g | yes |
 | `05_ASA_purple_1.3mf` | ASA purple | Frame_R | ~77 g | yes |
 | `06_ASA_purple_2.3mf` | ASA purple | Frame_L, Mag_Body | ~92 g | yes |
+| `07_PETG_natural_springs.3mf` | PETG natural | Spring_Trigger_1, Spring_Trigger_2, Spring_Catch_1, Spring_Catch_2, Spring_Release_1, Spring_Release_2 | ~1 g | yes |
 
-**Total:** ASA ~266 g.
+**Total:** PETG ~1 g, ASA ~268 g.
 
 > ASA: enclosure closed, ~260 C / 100 C bed, no fan for the first layers; turn on the slicer's filament shrinkage compensation (~0.5-0.7 %) or the 0.3 mm sliding fits get tight.
-> Extractor / mag base snaps in ASA are stiffer and more brittle than PETG: print the spare extractors, and if one cracks print it in PETG.
+> Extractor / mag base snaps in ASA are stiffer and more brittle than PETG: print the spare extractors, and if one cracks print it in PETG. The printed springs are always PETG (or TPU).
 
 ## 5_all_petg
 
@@ -82,12 +86,13 @@ Everything in PETG (no enclosure needed).
 
 | Plate | Filament | Parts | Filament | Closed mesh |
 |---|---|---|---|---|
-| `01_PETG_any_fine_layers.3mf` | PETG any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~14 g | yes |
-| `02_PETG_black.3mf` | PETG black | Slide | ~72 g | yes |
-| `03_PETG_natural.3mf` | PETG natural | Trigger_Bar, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod | ~16 g | yes |
-| `04_PETG_orange.3mf` | PETG orange | Muzzle_Orange, Mag_Base, Mag_Release, Trigger | ~13 g | yes |
-| `05_PETG_purple_1.3mf` | PETG purple | Frame_R | ~92 g | yes |
-| `06_PETG_purple_2.3mf` | PETG purple | Frame_L, Mag_Body | ~109 g | yes |
+| `01_PETG_any_fine_layers.3mf` | PETG any | Shell_Chambered_1, Shell_Chambered_2, Shell_Chambered_3, Shell_Chambered_4, Shell_Chambered_5, Shell_Chambered_6, Shell_Chambered_7, Shell_Chambered_8, Shell_Chambered_9, Shell_Chambered_10 | ~15 g | yes |
+| `02_PETG_black.3mf` | PETG black | Slide | ~71 g | yes |
+| `03_PETG_natural.3mf` | PETG natural | Trigger_Bar, Frame_Pin_1, Frame_Pin_2, Frame_Pin_3, Frame_Pin_6, Frame_Pin_7, Frame_Pin_4, Frame_Pin_5, Bolt, Mag_Follower, TubeCap, Catch, Plunger_Head, Extractor_1, Extractor_2, Extractor_3, Plunger_Rod, Bolt_Peg_1, Bolt_Peg_2 | ~19 g | yes |
+| `04_PETG_natural_springs.3mf` | PETG natural | Spring_Trigger_1, Spring_Trigger_2, Spring_Catch_1, Spring_Catch_2, Spring_Release_1, Spring_Release_2 | ~1 g | yes |
+| `05_PETG_orange.3mf` | PETG orange | Muzzle_Orange, Mag_Base, Mag_Release, Trigger | ~13 g | yes |
+| `06_PETG_purple_1.3mf` | PETG purple | Frame_R | ~91 g | yes |
+| `07_PETG_purple_2.3mf` | PETG purple | Frame_L, Mag_Body | ~109 g | yes |
 
-**Total:** PETG ~316 g.
+**Total:** PETG ~319 g.
 

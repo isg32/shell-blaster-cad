@@ -9,8 +9,8 @@ import Part
 from FreeCAD import Vector as V
 
 # =============================== PARAMETERS ===============================
-DART_D       = 11.5   # measure your soft darts!
-DART_L       = 18.0   # measure your soft darts!
+DART_D       = 12.0   # Indian sticky-tip refills are ~12 x 72 mm; measure yours!
+DART_L       = 18.0   # cut each refill dart to this length, KEEPING the soft tip (shell must hold it fully)
 DART_FIT     = -0.1   # shell bore = DART_D + DART_FIT (negative = snug grip)
 SHELL_WALL   = 1.5
 RIM_T        = 1.5
@@ -55,8 +55,10 @@ BODY_HW      = 12.0   # frame upper body half width (inside slide)
 RAIL_HW      = 15.0
 FRAME_BOT    = -27.0
 MAG_FRONT_WALL = 1.3
-PIN_D        = 3.0
-M3_D         = 3.2
+PIN_D        = 1.75   # catch pivot = a piece of 1.75 mm filament (no steel pin needed)
+PEG_D        = 4.5    # printed press-fit pins that hold the frame halves together (no screws/nuts)
+BOLT_PEG_D   = 4.0    # printed peg that holds the bolt in the slide (no screw)
+SPRING_T     = 0.8    # printed zig-zag spring strip thickness (PETG; TPU also works)
 EXTRACTOR_T  = 1.2
 TRIGGER_TRAVEL = 6.0
 RAMP_DROP    = 1.3    # how far the trigger ramp pushes the catch tab down
@@ -205,6 +207,28 @@ def vert_edge(e, tol=1e-6):
     p0, p1 = e.Vertexes[0].Point, e.Vertexes[-1].Point
     return len(e.Vertexes) == 2 and abs(p0.x - p1.x) < tol and abs(p0.y - p1.y) < tol
 
+def zigzag_spring(origin, axis, lateral, extrude, length, width, depth, bends=5, t=SPRING_T, pad=1.2):
+    """printed serpentine compression spring: strip of thickness t zig-zagging between two end pads.
+    axis = compression direction, lateral = zig-zag direction, extrude = thickness direction (unit vectors)."""
+    zl = length - 2 * pad
+    pts = [V(pad, -width / 2 + t / 2, 0)]
+    for i in range(1, bends + 1):
+        pts.append(V(pad + zl * i / (bends + 1), (width / 2 - t / 2) * (1 if i % 2 else -1), 0))
+    pts.append(V(pad + zl, (width / 2 - t / 2) * (1 if (bends + 1) % 2 else -1), 0))
+    sh = box(0, pad, -width / 2, width / 2, 0, depth).fuse(box(length - pad, length, -width / 2, width / 2, 0, depth))
+    for a, b in zip(pts[:-1], pts[1:]):
+        d = b - a
+        L = d.Length
+        seg = box(0, L, -t / 2, t / 2, 0, depth).rotated(V(0, 0, 0), V(0, 0, 1), math.degrees(math.atan2(d.y, d.x)))
+        sh = sh.fuse(seg.translated(a)).fuse(Part.makeCylinder(t / 2, depth, a))
+    sh = sh.fuse(Part.makeCylinder(t / 2, depth, pts[-1]))
+    sh = sh.common(box(0, length, -width / 2, width / 2, 0, depth))
+    a, b, c = axis, lateral, extrude
+    m = App.Matrix(a.x, b.x, c.x, 0, a.y, b.y, c.y, 0, a.z, b.z, c.z, 0, 0, 0, 0, 1)
+    sh = sh.copy()
+    sh.transformShape(m)
+    return sh.translated(origin)
+
 def clean(s):
     try:
         s = s.removeSplitter()
@@ -246,6 +270,7 @@ def dart_local():
 DART_SEAT = SHELL_CB + (CB_D / 2 - ORIFICE_D / 2) + RING_T   # dart rear in shell
 
 def build_shells():
+    assert DART_SEAT + DART_L <= SHELL_L + 0.01, 'dart longer than the shell: cut it to %.1f mm' % (SHELL_L - DART_SEAT)
     s = shell_local()
     t = -STROKE * SLIDE_POS
     # chambered shell (slide back: already ejected)
@@ -364,7 +389,7 @@ def build_bolt():
     # top screw boss
     boss = box(BOSS_X0, BOSS_X1, -4, 4, 8.0, 14.5)
     boss = boss.cut(cylx(ri, BOSS_X0 - 1, BOSS_X1 + 1))
-    b = b.fuse(boss).cut(cylz(1.25, 10.5, 15, x=(BOSS_X0 + BOSS_X1) / 2))
+    b = b.fuse(boss).cut(cylz(BOLT_PEG_D / 2, 10.5, 15, x=(BOSS_X0 + BOSS_X1) / 2))
     # bayonet: 2 axial entry slots at +-Y, ring groove at the lug position (quarter turn to lock)
     b = b.cut(box(TUBE_REAR - 1, LUG_X + 1.1, -(ri + 1.3), ri + 1.3, -1.6, 1.6).cut(cylx(ri - 0.5, TUBE_REAR - 2, LUG_X + 2)))
     b = b.cut(cylx(ri + 1.3, LUG_X - 1.1, LUG_X + 1.1))
@@ -400,6 +425,10 @@ def build_catch():
     c = c.cut(cyly(PIN_D / 2 + 0.15, -9, 9, x=PIVOT_X, z=PIVOT_Z))
     c = c.cut(cylz(1.6, -7.5, -5.3, x=TOOTH_X - 1.5))     # spring seat
     add('Catch', c, COL['grey'], print_rot=('x', -90))
+    # catch spring: printed zig-zag standing in the frame pocket under the lever
+    add('Spring_Catch', zigzag_spring(V(TOOTH_X - 1.5, -1.2, -16.0 + 0.05), V(0, 0, 1), V(1, 0, 0), V(0, 1, 0),
+                                       (-6.8 - 0.05) - (-16.0 + 0.05), 3.6, 2.4, bends=5, t=0.7), COL['natural'],
+        print_rot=('x', 90))
 
 # ---- trigger (slider + curved finger blade + push bar) ----
 def trigger_blade(x0, z0):
@@ -433,8 +462,10 @@ def build_trigger():
     t = sl.fuse(blade).cut(cyly(1.0, 1.9, 3.6, x=x0 + 1.5, z=z0 + 2.0))
     add('Trigger', t, COL['orange'], print_rot=('x', 90))
     add('Trigger_Bar', tb, COL['grey'], print_rot='outerY')
-    # trigger return spring ref
-    add('TrigSpring_ref', cylx(2.0, x0 + 8.3, x1 - 2, z=(TRIG_Z0 + TRIG_Z1) / 2).cut(cylx(1.5, x0, x1, z=(TRIG_Z0 + TRIG_Z1) / 2)), COL['steel'], printable=False, alpha=50)
+    # trigger return spring: printed zig-zag between the frame post and the window front wall
+    sx0, sx1 = TRIG_X0 + 8.0 + 0.05, x1 - 2 - 0.05
+    add('Spring_Trigger', zigzag_spring(V(sx0, 0, z0 + 0.6), V(1, 0, 0), V(0, 1, 0), V(0, 0, 1),
+                                         sx1 - sx0, 4.6, (z1 - z0) - 1.2, bends=6), COL['natural'])
 
 # ---- mag release latch (orange button) ----
 def build_release():
@@ -452,10 +483,11 @@ def build_release():
     ramp = Part.Face(Part.makePolygon([V(0, -LUG_HW - 0.3, z0 - 0.01), V(0, REL_WIN[0] + 0.01, z0 - 0.01),
                                        V(0, REL_WIN[0] + 0.01, z1 - 1.5), V(0, -LUG_HW - 0.3, z0 - 0.01)]))
     r = r.cut(ramp.extrude(V(xw1 - xw0, 0, 0)).translated(V(xw0, 0, 0)))
-    r = r.cut(cyly(1.6, REL_INNER - 2.1, REL_INNER + 3.0, x=(x0 + x1) / 2, z=(z0 + z1) / 2))   # spring hole
     add('Mag_Release', r, COL['orange'], print_rot=('x', 180))
-    add('RelSpring_ref', cyly(1.5, REL_POCKET + 0.1, REL_INNER + 2.9, x=(x0 + x1) / 2, z=(z0 + z1) / 2)
-        .cut(cyly(1.1, -99, 99, x=(x0 + x1) / 2, z=(z0 + z1) / 2)), COL['steel'], printable=False, alpha=50)
+    # return spring: printed zig-zag in the pocket behind the latch collar
+    ys0, ys1 = REL_POCKET + 0.05, REL_INNER - 2.0 - 0.05
+    add('Spring_Release', zigzag_spring(V((x0 + x1) / 2, ys0, z0 - 2.0), V(0, 1, 0), V(1, 0, 0), V(0, 0, 1),
+                                         ys1 - ys0, (x1 - x0) + 1.8, (z1 - z0) + 2.0 - 0.3, bends=4, t=0.7), COL['natural'])
 
 # ---- slide (black ASA) ----
 def build_slide():
@@ -479,10 +511,12 @@ def build_slide():
         pad = Part.Face(Part.Wire(Part.Ellipse(V(0, 0, 0), 11.0, 4.5).toShape())).extrude(V(0, 0, 3.0))
         pad = pad.rotated(V(0, 0, 0), V(1, 0, 0), -90 * sy)
         sl = sl.cut(pad.translated(V(BODY_REAR + 20, sy * (hw - 0.9), 5.0)))
-    # tube screw boss pocket + M3 counterbored hole
+    # tube boss pocket + hole for the printed bolt peg
     bx = (BOSS_X0 + BOSS_X1) / 2
     sl = sl.cut(box(BOSS_X0 - CLR, BOSS_X1 + CLR, -4 - CLR, 4 + CLR, 0, 14.5 + 0.2))
-    sl = sl.cut(cylz(M3_D / 2, 10, SLIDE_TOP + 1, x=bx)).cut(cylz(3.0, SLIDE_TOP - 2.0, SLIDE_TOP + 1, x=bx))
+    sl = sl.cut(cylz(BOLT_PEG_D / 2, 10, SLIDE_TOP + 1, x=bx))
+    peg = cylz(BOLT_PEG_D / 2, 10.6, SLIDE_TOP - 0.2, x=bx)
+    add('Bolt_Peg', peg.translated(V(off, 0, 0)), COL['grey'], moving=True)
     # clearance over the magazine for the whole stroke
     sl = sl.cut(box(POST_X0 - CLR, MAG_OUT_X1 + STROKE + CLR, -(MAG_OUT_Y + 0.4), MAG_OUT_Y + 0.4, SLIDE_BOT - 1, BRIDGE_Z1 + 0.4))
     # ejection port (right side), over the shell when the slide is back
@@ -596,20 +630,20 @@ def build_frame():
     f = f.cut(box(PIVOT_X - 7.5, PIVOT_X + 2.5, -2.5 - CLR, 2.5 + CLR, FOOT_Z0 - 0.8, -6.0))     # leg swings back
     f = f.cut(box(PIVOT_X - 7.5, PIVOT_X + 1.0 + CLR, 2.0, by1, FOOT_Z0 - 0.8, FOOT_Z0 + 4.0))  # foot (rises as it swings)
     f = f.cut(cyly(3.0 + CLR, -2.8, 2.8, x=PIVOT_X, z=PIVOT_Z))
-    f = f.cut(cyly(PIN_D / 2, -11, 11, x=PIVOT_X, z=PIVOT_Z))
+    f = f.cut(cyly(PIN_D / 2 + 0.03, -11, 11, x=PIVOT_X, z=PIVOT_Z))   # filament pivot
     f = f.cut(cylz(2.3, -16, -6.0, x=TOOTH_X - 1.5))
     f = f.cut(cylx(ROD_D / 2 + 0.8, BODY_REAR + 1.5, TUBE_SWEEP_END + 1))
-    # M3 screws: (x, z, outer half-width)
+    # frame pins (were M3 screws): (x, z, outer half-width)
     gm, gl = grip_x_at(-52), grip_x_at(GRIP_BOT + 16)
     SCREWS = [(SLIDE_FRONT - 14, FRAME_BOT + 10.2, hw), (-60, FRAME_BOT + 10.2, hw),
               (-130, FRAME_BOT + 10.2, hw),
               (FH_X0 + 2.8, -55, FH_HW), (FH_X0 + 2.8, FH_BOT + 10, FH_HW),
               ((gm[0] + gm[1]) / 2, -52, GRIP_HW), ((gl[0] + gl[1]) / 2, GRIP_BOT + 16, GRIP_HW)]
-    for x, z, yo in SCREWS:
-        f = f.cut(cyly(M3_D / 2, -yo - 2, yo + 2, x=x, z=z))
-        f = f.cut(cyly(3.1, -yo - 2, -yo + 3.0, x=x, z=z))                     # head counterbore
-        hexp = Part.makePolygon([V(x + 3.3 * math.cos(math.radians(a)), 0, z + 3.3 * math.sin(math.radians(a))) for a in range(0, 361, 60)])
-        f = f.cut(Part.Face(hexp).extrude(V(0, 5.0, 0)).translated(V(0, yo - 3.0, 0)))   # nut trap
+    for k, (x, z, yo) in enumerate(SCREWS):
+        f = f.cut(cyly(PEG_D / 2 + 0.05, -yo - 2, yo + 2, x=x, z=z))            # through hole for a printed pin
+        pin = cyly(PEG_D / 2, -yo + 0.6, yo - 0.6, x=x, z=z)
+        pin = pin.cut(box(x - 5, x + 5, -yo - 1, yo + 1, z - PEG_D / 2 - 1, z - PEG_D / 2 + 0.5))   # flat: prints lying down
+        add('Frame_Pin_%d' % (k + 1), pin, COL['grey'])
     f = clean(f)
     big = 300
     add('Frame_R', f.common(box(-big, big, 0, big, -big, big)), COL['purple'], print_rot='flatY')
@@ -680,8 +714,9 @@ def print_checks(bed=256.0, min_contact=20.0):
         bb = sh.BoundBox
         contact = sum(f.Area for f in sh.Faces if f.Surface.__class__.__name__ == 'Plane' and abs(f.CenterOfMass.z) < 1e-3)
         fits = max(bb.XLength, bb.YLength) <= bed - 6 and bb.ZLength <= bed
+        need = min(min_contact, 0.6 * bb.XLength * bb.YLength)       # small parts: most of their footprint
         out.append((n, round(bb.XLength, 1), round(bb.YLength, 1), round(bb.ZLength, 1), round(contact, 1),
-                    fits and contact >= min_contact))
+                    fits and contact >= need))
     return out
 
 def export_stl(folder=None):
