@@ -269,6 +269,38 @@ Calipers; a screwdriver or hex key for the M3 screws; flush cutters; drill bits 
   is too loose or too tight.
 - **Screws:** an M3 screw-and-nut kit covers every screw and nut.
 
+### Where to buy in India: onlyscrews.in (checked 2026-11-25)
+
+This is a partial check. The site rate-limited automated requests after a few pages, so only the items below
+were confirmed, with prices from its homepage on that date. Prices and stock change, so re-check before
+ordering.
+
+| Covers | Product | Price |
+|---|---|---|
+| M3 socket-head screws (stainless) | [M3 Allen Socket head SS304 assorted box](https://onlyscrews.in/products/m3-allen-socket-head-ss304-assorted-box) | ₹310 |
+| M3 hex nuts (+ M4/M5 nuts, washers) | [Hex Nuts and Washers Assorted Pack M3, M4 & M5 (SS304)](https://onlyscrews.in/products/hex-nuts-and-washers-assorted-screw-pack-m3-m4-m5-ss304) | ₹470 |
+| Screws + nuts in one kit | [M3 & M4 3D Printing assorted screw pack](https://onlyscrews.in/products/3d-printing-assorted-screw-pack-allen-socket-heads-hex-nuts-nyloc-nuts-washers-brass-inserts) | ₹1,540 |
+| Bigger screw assortment | [Hex (Allen) Socket Head Assorted Screw Pack M3, M4 & M5 (SS304)](https://onlyscrews.in/products/hexallen-socket-head-assorted-screw-pack-ss304) | ₹1,140 |
+
+> **Check the box contents before ordering.** The lengths inside the assortments weren't visible. You need
+> **M3 × 30 (5), M3 × 25 (2) and M3 × 6 (1)**. Many M3 assortments stop at 20 mm, so if 30 mm isn't included,
+> buy those screws separately.
+
+**Categories the site has but that weren't checked** (they were blocked during the lookup):
+- Single socket-head screws (M3 × 30 / × 25 / × 6): [collections/socket-head](https://onlyscrews.in/collections/socket-head)
+- Hex nuts: [collections/nuts](https://onlyscrews.in/collections/nuts)
+- 3 mm dowel pins for the catch pivot (~20 mm): [collections/hard-dowel-pins](https://onlyscrews.in/collections/hard-dowel-pins)
+- Compression springs: [collections/compression-springs](https://onlyscrews.in/collections/compression-springs)
+
+**Probably not on onlyscrews.in:**
+- **O-rings:** no O-ring category was found. Get the 16 mm ID × 2 mm NBR O-ring, or an NBR O-ring kit,
+  elsewhere.
+- **Main spring and mag spring:** the ~18 × 50 mm main spring and the 160–170 mm mag spring are unusual
+  sizes. Even if the small springs are available there, these two may need a specialist spring seller.
+
+**Likely cheapest basket:** the ₹310 M3 socket-head box plus the ₹470 nut pack. That works only if the box
+has the lengths above.
+
 ## 8. Cleaning up the prints
 
 1. **Remove brims** and any stringing.
